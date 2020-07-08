@@ -1,0 +1,31 @@
+From 6e228f0854b9bc4f5320e170c559226282af4972 Mon Sep 17 00:00:00 2001
+From: Ian <ian@iangbb.me>
+Date: Wed, 8 Jul 2020 22:47:12 +0100
+Subject: [PATCH] Temporarily change groupId to network.stratus
+
+
+diff --git a/pom.xml b/pom.xml
+index 6a9d969e..95d7fb0a 100644
+--- a/pom.xml
++++ b/pom.xml
+@@ -20,7 +20,7 @@
+     </properties>
+ 
+     <parent>
+-        <groupId>app.ashcon</groupId>
++        <groupId>network.stratus</groupId>
+         <artifactId>sportpaper-parent</artifactId>
+         <version>1.8-SNAPSHOT</version>
+         <relativePath>../pom.xml</relativePath>
+@@ -38,7 +38,7 @@
+             <version>3.0.3</version>
+         </dependency>
+         <dependency>
+-            <groupId>app.ashcon</groupId>
++            <groupId>network.stratus</groupId>
+             <artifactId>sportpaper-api</artifactId>
+             <version>${project.version}</version>
+             <type>jar</type>
+-- 
+2.25.1
+
