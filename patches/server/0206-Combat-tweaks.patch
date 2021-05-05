@@ -1,0 +1,71 @@
+From a0197ca8e810eb35a4c8e76ba7170629161cf667 Mon Sep 17 00:00:00 2001
+From: halfmaster1 <ohpointfive@gmail.com>
+Date: Wed, 5 May 2021 02:20:01 -0400
+Subject: [PATCH] Combat tweaks
+
+
+diff --git a/src/main/java/net/minecraft/server/EntityArrow.java b/src/main/java/net/minecraft/server/EntityArrow.java
+index dd903aa7..20945291 100644
+--- a/src/main/java/net/minecraft/server/EntityArrow.java
++++ b/src/main/java/net/minecraft/server/EntityArrow.java
+@@ -244,11 +244,11 @@ public class EntityArrow extends Entity implements IProjectile {
+             if (movingobjectposition != null) {
+                 org.bukkit.craftbukkit.event.CraftEventFactory.callProjectileHitEvent(this); // CraftBukkit - Call event
+                 if (movingobjectposition.entity != null) {
+-                    f2 = MathHelper.sqrt(this.motX * this.motX + this.motY * this.motY + this.motZ * this.motZ);
+-                    int k = MathHelper.f((double) f2 * this.damage);
++                    f2 = Math.min(PaperSpigotConfig.maximumArrowVelocity, MathHelper.sqrt(this.motX * this.motX + this.motY * this.motY + this.motZ * this.motZ));
++                    float k = f2 * (float) this.damage;
+ 
+                     if (this.isCritical() && PaperSpigotConfig.includeRandomnessInArrowDamage) { // SportPaper
+-                        k += this.random.nextInt(k / 2 + 2);
++                        k += this.random.nextFloat() * 2 + k / 2;
+                     }
+ 
+                     DamageSource damagesource;
+@@ -260,7 +260,7 @@ public class EntityArrow extends Entity implements IProjectile {
+                     }
+ 
+                     // CraftBukkit start - Moved damage call
+-                    if (movingobjectposition.entity.damageEntity(damagesource, (float) k)) {
++                    if (movingobjectposition.entity.damageEntity(damagesource, k)) {
+                     if (this.isBurning() && !(movingobjectposition.entity instanceof EntityEnderman) && (!(movingobjectposition.entity instanceof EntityPlayer) || !(this.shooter instanceof EntityPlayer) || this.world.pvpMode)) { // CraftBukkit - abide by pvp setting if destination is a player
+                         EntityCombustByEntityEvent combustEvent = new EntityCombustByEntityEvent(this.getBukkitEntity(), entity.getBukkitEntity(), 5);
+                         org.bukkit.Bukkit.getPluginManager().callEvent(combustEvent);
+diff --git a/src/main/java/net/minecraft/server/PlayerConnection.java b/src/main/java/net/minecraft/server/PlayerConnection.java
+index 5e903d40..fde31c77 100644
+--- a/src/main/java/net/minecraft/server/PlayerConnection.java
++++ b/src/main/java/net/minecraft/server/PlayerConnection.java
+@@ -1464,7 +1464,7 @@ public class PlayerConnection implements PacketListenerPlayIn, IUpdatePlayerList
+ 
+         this.player.resetIdleTimer();
+         if (entity != null) {
+-            boolean flag = this.player.hasLineOfSight(entity);
++            boolean flag = !PaperSpigotConfig.checkLOSOnHits || this.player.hasLineOfSight(entity);
+             double d0 = 36.0D;
+ 
+             if (!flag) {
+diff --git a/src/main/java/org/github/paperspigot/PaperSpigotConfig.java b/src/main/java/org/github/paperspigot/PaperSpigotConfig.java
+index 8d58d1f3..66b77971 100644
+--- a/src/main/java/org/github/paperspigot/PaperSpigotConfig.java
++++ b/src/main/java/org/github/paperspigot/PaperSpigotConfig.java
+@@ -123,6 +123,16 @@ public class PaperSpigotConfig
+         includeRandomnessInArrowDamage = getBoolean("settings.include-randomness-in-arrow-damage", includeRandomnessInArrowDamage);
+     }
+ 
++    public static boolean checkLOSOnHits = true;
++    private static void checkLOSOnHits() {
++        checkLOSOnHits = getBoolean("settings.check-los-on-hits", checkLOSOnHits);
++    }
++
++    public static float maximumArrowVelocity = 100.0f;
++    private static void maximumArrowVelocity() {
++        maximumArrowVelocity = (float) getDouble("settings.maximum-arrow-velocity", (double) maximumArrowVelocity);
++    }
++
+     public static boolean tickEmptyWorlds = true;
+     private static void tickEmptyWorlds() {
+         tickEmptyWorlds = getBoolean("settings.tick-empty-worlds", tickEmptyWorlds);
+-- 
+2.29.2
+
