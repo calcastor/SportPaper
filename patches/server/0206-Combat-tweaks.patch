@@ -1,11 +1,11 @@
-From a0197ca8e810eb35a4c8e76ba7170629161cf667 Mon Sep 17 00:00:00 2001
+From 662de7105bd3b963e75cfb35a140b0c299b8985d Mon Sep 17 00:00:00 2001
 From: halfmaster1 <ohpointfive@gmail.com>
 Date: Wed, 5 May 2021 02:20:01 -0400
 Subject: [PATCH] Combat tweaks
 
 
 diff --git a/src/main/java/net/minecraft/server/EntityArrow.java b/src/main/java/net/minecraft/server/EntityArrow.java
-index dd903aa7..20945291 100644
+index dd903aa7..4239fd89 100644
 --- a/src/main/java/net/minecraft/server/EntityArrow.java
 +++ b/src/main/java/net/minecraft/server/EntityArrow.java
 @@ -244,11 +244,11 @@ public class EntityArrow extends Entity implements IProjectile {
@@ -15,7 +15,7 @@ index dd903aa7..20945291 100644
 -                    f2 = MathHelper.sqrt(this.motX * this.motX + this.motY * this.motY + this.motZ * this.motZ);
 -                    int k = MathHelper.f((double) f2 * this.damage);
 +                    f2 = Math.min(PaperSpigotConfig.maximumArrowVelocity, MathHelper.sqrt(this.motX * this.motX + this.motY * this.motY + this.motZ * this.motZ));
-+                    float k = f2 * (float) this.damage;
++                    float k = f2 * (float) this.damage * PaperSpigotConfig.arrowDamageMultiplier;
  
                      if (this.isCritical() && PaperSpigotConfig.includeRandomnessInArrowDamage) { // SportPaper
 -                        k += this.random.nextInt(k / 2 + 2);
@@ -46,10 +46,10 @@ index 5e903d40..fde31c77 100644
  
              if (!flag) {
 diff --git a/src/main/java/org/github/paperspigot/PaperSpigotConfig.java b/src/main/java/org/github/paperspigot/PaperSpigotConfig.java
-index 8d58d1f3..66b77971 100644
+index 8d58d1f3..4ccaa0b0 100644
 --- a/src/main/java/org/github/paperspigot/PaperSpigotConfig.java
 +++ b/src/main/java/org/github/paperspigot/PaperSpigotConfig.java
-@@ -123,6 +123,16 @@ public class PaperSpigotConfig
+@@ -123,6 +123,21 @@ public class PaperSpigotConfig
          includeRandomnessInArrowDamage = getBoolean("settings.include-randomness-in-arrow-damage", includeRandomnessInArrowDamage);
      }
  
@@ -61,6 +61,11 @@ index 8d58d1f3..66b77971 100644
 +    public static float maximumArrowVelocity = 100.0f;
 +    private static void maximumArrowVelocity() {
 +        maximumArrowVelocity = (float) getDouble("settings.maximum-arrow-velocity", (double) maximumArrowVelocity);
++    }
++
++    public static float arrowDamageMultiplier = 1.0f;
++    private static void arrowDamageMultiplier() {
++        arrowDamageMultiplier = (float) getDouble("settings.arrow-damage-multiplier", (double) arrowDamageMultiplier);
 +    }
 +
      public static boolean tickEmptyWorlds = true;
