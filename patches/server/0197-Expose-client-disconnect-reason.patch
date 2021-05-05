@@ -1,4 +1,4 @@
-From e71bdd3cadca08aa2c3addefd95ff256a290443b Mon Sep 17 00:00:00 2001
+From 94cdd048b2ce48cc2fb9012ecf72a7d5b7a31ff4 Mon Sep 17 00:00:00 2001
 From: Austin L Mayes <me@austinlm.me>
 Date: Wed, 17 Feb 2021 16:37:59 -0600
 Subject: [PATCH] Expose client disconnect reason
@@ -99,5 +99,5 @@ index d09f7453..cb6a3be0 100644
          entityplayer1.copyTo(entityplayer, flag);
          entityplayer1.d(entityplayer.getId());
 -- 
-2.25.1
+2.22.1
 

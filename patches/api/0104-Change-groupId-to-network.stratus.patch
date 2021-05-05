@@ -1,0 +1,22 @@
+From b46f88242e2e0acbd0b65d7b4c8fbf41d7d2c21f Mon Sep 17 00:00:00 2001
+From: ShinyDialga <shinydialga45@gmail.com>
+Date: Wed, 5 May 2021 00:08:13 -0500
+Subject: [PATCH] Change groupId to network.stratus
+
+
+diff --git a/pom.xml b/pom.xml
+index 76533897..7250e367 100644
+--- a/pom.xml
++++ b/pom.xml
+@@ -4,7 +4,7 @@
+     <modelVersion>4.0.0</modelVersion>
+ 
+     <parent>
+-        <groupId>app.ashcon</groupId>
++        <groupId>network.stratus</groupId>
+         <artifactId>sportpaper-parent</artifactId>
+         <version>1.8-SNAPSHOT</version>
+     </parent>
+-- 
+2.22.1
+

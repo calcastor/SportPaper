@@ -1,4 +1,4 @@
-From c54899c8dd35a95ddccc9690ff3306bbe1965a51 Mon Sep 17 00:00:00 2001
+From f5f41f50e03271cc9f3d14f464068ee33a111948 Mon Sep 17 00:00:00 2001
 From: VytskaLT <VytskaLT@protonmail.com>
 Date: Sat, 17 Apr 2021 19:20:22 +0300
 Subject: [PATCH] Fix EntityKnockbackByEntityEvent
@@ -107,4 +107,5 @@ index b7d410ee..b6f0aaaf 100644
                      }
                  }
 -- 
-2.25.1
+2.22.1
+
