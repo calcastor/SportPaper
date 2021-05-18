@@ -1,0 +1,38 @@
+From abf6c2f15f149796483506da0b11849a9b16ab5d Mon Sep 17 00:00:00 2001
+From: halfmaster1 <ohpointfive@gmail.com>
+Date: Tue, 18 May 2021 04:28:46 -0400
+Subject: [PATCH] Make critical hits configurable
+
+
+diff --git a/src/main/java/net/minecraft/server/EntityHuman.java b/src/main/java/net/minecraft/server/EntityHuman.java
+index 0e68599d..ef182d42 100644
+--- a/src/main/java/net/minecraft/server/EntityHuman.java
++++ b/src/main/java/net/minecraft/server/EntityHuman.java
+@@ -1015,7 +1015,7 @@ public abstract class EntityHuman extends EntityLiving {
+                     boolean flag = !world.paperSpigotConfig.disablePlayerCrits && this.fallDistance > 0.0F && !this.onGround && !this.k_() && !this.V() && !this.hasEffect(MobEffectList.BLINDNESS) && this.vehicle == null && entity instanceof EntityLiving; // PaperSpigot
+ 
+                     if (flag && f > 0.0F) {
+-                        f *= 1.5F;
++                        f *= PaperSpigotConfig.criticalHitMultiplier;
+                     }
+ 
+                     f += f1;
+diff --git a/src/main/java/org/github/paperspigot/PaperSpigotConfig.java b/src/main/java/org/github/paperspigot/PaperSpigotConfig.java
+index 4ccaa0b0..34217d3c 100644
+--- a/src/main/java/org/github/paperspigot/PaperSpigotConfig.java
++++ b/src/main/java/org/github/paperspigot/PaperSpigotConfig.java
+@@ -138,6 +138,11 @@ public class PaperSpigotConfig
+         arrowDamageMultiplier = (float) getDouble("settings.arrow-damage-multiplier", (double) arrowDamageMultiplier);
+     }
+ 
++    public static float criticalHitMultiplier = 1.5f;
++    private static void criticalHitMultiplier() {
++        criticalHitMultiplier = (float) getDouble("settings.critical-hit-multiplier", (double) criticalHitMultiplier);
++    }
++
+     public static boolean tickEmptyWorlds = true;
+     private static void tickEmptyWorlds() {
+         tickEmptyWorlds = getBoolean("settings.tick-empty-worlds", tickEmptyWorlds);
+-- 
+2.29.2
+
