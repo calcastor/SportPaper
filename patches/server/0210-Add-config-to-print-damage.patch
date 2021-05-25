@@ -1,0 +1,48 @@
+From d3e30d58e3ea2145995ecc0f888aefbe161143e6 Mon Sep 17 00:00:00 2001
+From: halfmaster1 <ohpointfive@gmail.com>
+Date: Mon, 24 May 2021 22:38:24 -0400
+Subject: [PATCH] Add config to print damage
+
+
+diff --git a/src/main/java/net/minecraft/server/EntityPlayer.java b/src/main/java/net/minecraft/server/EntityPlayer.java
+index 24d15388..ed0a56cc 100644
+--- a/src/main/java/net/minecraft/server/EntityPlayer.java
++++ b/src/main/java/net/minecraft/server/EntityPlayer.java
+@@ -27,6 +27,7 @@ import org.bukkit.craftbukkit.util.Skins;
+ import org.bukkit.event.inventory.InventoryType;
+ import org.bukkit.event.player.PlayerSkinPartsChangeEvent;
+ import org.bukkit.event.player.PlayerTeleportEvent.TeleportCause;
++import org.github.paperspigot.PaperSpigotConfig;
+ // CraftBukkit end
+ 
+ public class EntityPlayer extends EntityHuman implements ICrafting {
+@@ -511,6 +512,10 @@ public class EntityPlayer extends EntityHuman implements ICrafting {
+                     }
+                 }
+ 
++                if (PaperSpigotConfig.printDamage) {
++                    org.bukkit.Bukkit.broadcastMessage("Damage: " + (f / 2.0f) + "§4❤");
++                }
++
+                 return super.damageEntity(damagesource, f);
+             }
+         }
+diff --git a/src/main/java/org/github/paperspigot/PaperSpigotConfig.java b/src/main/java/org/github/paperspigot/PaperSpigotConfig.java
+index 86e9c442..d913e42e 100644
+--- a/src/main/java/org/github/paperspigot/PaperSpigotConfig.java
++++ b/src/main/java/org/github/paperspigot/PaperSpigotConfig.java
+@@ -148,6 +148,11 @@ public class PaperSpigotConfig
+         enchantmentRandomProtection = getBoolean("settings.enchantment-random-protection", enchantmentRandomProtection);
+     }
+ 
++    public static boolean printDamage = false;
++    private static void printDamage() {
++        printDamage = getBoolean("settings.print-damage", printDamage);
++    }
++
+     public static boolean tickEmptyWorlds = true;
+     private static void tickEmptyWorlds() {
+         tickEmptyWorlds = getBoolean("settings.tick-empty-worlds", tickEmptyWorlds);
+-- 
+2.29.2
+
