@@ -1,0 +1,311 @@
+From 30b541cd82dc6b99b73f23f7606825e7418e31cf Mon Sep 17 00:00:00 2001
+From: ShinyDialga <shinydialga45@gmail.com>
+Date: Wed, 30 Jun 2021 15:16:59 -0500
+Subject: [PATCH] Changes to chunk loading
+
+
+diff --git a/src/main/java/net/minecraft/server/ChunkProviderServer.java b/src/main/java/net/minecraft/server/ChunkProviderServer.java
+index 8df6b49b..7877a1cc 100644
+--- a/src/main/java/net/minecraft/server/ChunkProviderServer.java
++++ b/src/main/java/net/minecraft/server/ChunkProviderServer.java
+@@ -3,62 +3,37 @@ package net.minecraft.server;
+ import java.io.IOException;
+ import java.util.Iterator;
+ import java.util.List;
+-
+ import org.apache.logging.log4j.LogManager;
+ import org.apache.logging.log4j.Logger;
+-
+ // CraftBukkit start
+ import java.util.Random;
+-
+-import org.bukkit.Bukkit;
+ import org.bukkit.Server;
+ import org.bukkit.craftbukkit.chunkio.ChunkIOExecutor;
+ import org.bukkit.craftbukkit.util.LongHash;
+ import org.bukkit.event.world.ChunkUnloadEvent;
+-import org.github.paperspigot.event.ServerExceptionEvent;
+-import org.github.paperspigot.exception.ServerInternalException;
+ // CraftBukkit end
+-// SportPaper start
++// TacoSpigot start
+ import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
+ import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
+-import it.unimi.dsi.fastutil.longs.LongIterator;
+ import it.unimi.dsi.fastutil.longs.LongArraySet;
++import it.unimi.dsi.fastutil.longs.LongIterator;
+ import it.unimi.dsi.fastutil.longs.LongSet;
+-// SportPaper end
++// TacoSpigot end
+ 
+ public class ChunkProviderServer implements IChunkProvider {
+ 
+     private static final Logger b = LogManager.getLogger();
+-    public LongSet unloadQueue = new LongArraySet(20); // SportPaper
++    public LongSet unloadQueue = new LongArraySet(); // CraftBukkit - LongHashSet // TacoSpigot - LongHashSet -> HashArraySet
+     public Chunk emptyChunk;
+     public IChunkProvider chunkProvider;
+-    // SportPaper - Make chunkloader public
++    // FlamePaper - Make chunkLoader public
+     public IChunkLoader chunkLoader;
+     public boolean forceChunkLoad = false; // CraftBukkit - true -> false
+-    // Paper start
+-    protected Chunk lastChunkByPos = null;
+-    public Long2ObjectMap<Chunk> chunks = new Long2ObjectOpenHashMap<Chunk>(8192, 0.5f) {
+-        @Override
+-        public Chunk get(long key) {
+-            if (lastChunkByPos != null && key == lastChunkByPos.chunkKey) {
+-                return lastChunkByPos;
+-            }
+-            return lastChunkByPos = super.get(key);
+-        }
+-
+-        @Override
+-        public Chunk remove(long key) {
+-            if (lastChunkByPos != null && key == lastChunkByPos.chunkKey) {
+-                lastChunkByPos = null;
+-            }
+-            return super.remove(key);
+-        }
+-    }; // CraftBukkit
+-    // Paper end
++    public Long2ObjectMap<Chunk> chunks = new Long2ObjectOpenHashMap<>(4096, 0.5f); // TacoSpigot - use trove Long2ObjectOpenHashMap instead of craftbukkit implementation (using inital capacity and load factor chosen by Amaranth in an old impl)
+     public WorldServer world;
+ 
+     public ChunkProviderServer(WorldServer worldserver, IChunkLoader ichunkloader, IChunkProvider ichunkprovider) {
+-        this.emptyChunk = new EmptyChunk(worldserver, 0, 0);
++        this.emptyChunk = new EmptyChunk(worldserver, Integer.MIN_VALUE, Integer.MIN_VALUE); // MinetickMod
+         this.world = worldserver;
+         this.chunkLoader = ichunkloader;
+         this.chunkProvider = ichunkprovider;
+@@ -69,7 +44,7 @@ public class ChunkProviderServer implements IChunkProvider {
+     }
+ 
+     // CraftBukkit start - Change return type to Collection and return the values of our chunk map
+-    public java.util.Collection a() {
++    public java.util.Collection<Chunk> a() {
+         // return this.chunkList;
+         return this.chunks.values();
+         // CraftBukkit end
+@@ -96,7 +71,7 @@ public class ChunkProviderServer implements IChunkProvider {
+         if (this.world.worldProvider.e()) {
+             if (!this.world.c(i, j)) {
+                 // CraftBukkit start
+-                this.unloadQueue.add(LongHash.toLong(i, j)); // SportPaper
++                this.unloadQueue.add(LongHash.toLong(i, j));  // TacoSpigot - directly invoke LongHash
+ 
+                 Chunk c = chunks.get(LongHash.toLong(i, j));
+                 if (c != null) {
+@@ -106,7 +81,7 @@ public class ChunkProviderServer implements IChunkProvider {
+             }
+         } else {
+             // CraftBukkit start
+-            this.unloadQueue.add(LongHash.toLong(i, j)); // SportPaper
++            this.unloadQueue.add(LongHash.toLong(i, j)); // TacoSpigot - directly invoke LongHash
+ 
+             Chunk c = chunks.get(LongHash.toLong(i, j));
+             if (c != null) {
+@@ -128,12 +103,6 @@ public class ChunkProviderServer implements IChunkProvider {
+ 
+     }
+ 
+-    // SportPaper start
+-    public boolean isChunkGenerated(int x, int z) {
+-        return this.chunks.containsKey(ChunkCoordIntPair.asLong(x, z)) || ((ChunkRegionLoader)this.chunkLoader).chunkExists(world, x, z);
+-    }
+-    // SportPaper end
+-
+     // CraftBukkit start - Add async variant, provide compatibility
+     public Chunk getChunkIfLoaded(int x, int z) {
+         return chunks.get(LongHash.toLong(x, z));
+@@ -144,6 +113,7 @@ public class ChunkProviderServer implements IChunkProvider {
+     }
+ 
+     public Chunk getChunkAt(int i, int j, Runnable runnable) {
++        unloadQueue.remove(LongHash.toLong(i, j)); // TacoSpigot - directly invoke LongHash
+         Chunk chunk = chunks.get(LongHash.toLong(i, j));
+         ChunkRegionLoader loader = null;
+ 
+@@ -163,7 +133,6 @@ public class ChunkProviderServer implements IChunkProvider {
+             chunk = originalGetChunkAt(i, j);
+         }
+ 
+-        unloadQueue.remove(LongHash.toLong(i, j)); // SportPaper
+         // If we didn't load the chunk async and have a callback run it now
+         if (runnable != null) {
+             runnable.run();
+@@ -172,10 +141,13 @@ public class ChunkProviderServer implements IChunkProvider {
+         return chunk;
+     }
+     public Chunk originalGetChunkAt(int i, int j) {
++        this.unloadQueue.remove(LongHash.toLong(i, j)); // TacoSpigot - directly invoke LongHash
+         Chunk chunk = (Chunk) this.chunks.get(LongHash.toLong(i, j));
+         boolean newChunk = false;
+         // CraftBukkit end
+ 
++        Server server = world.getServer();
++
+         if (chunk == null) {
+             world.timings.syncChunkLoadTimer.startTiming(); // Spigot
+             chunk = this.loadChunk(i, j);
+@@ -199,11 +171,10 @@ public class ChunkProviderServer implements IChunkProvider {
+             }
+ 
+             this.chunks.put(LongHash.toLong(i, j), chunk);
+-            
++
+             chunk.addEntities();
+-            
++
+             // CraftBukkit start
+-            Server server = world.getServer();
+             if (server != null) {
+                 /*
+                  * If it's a new world, the first few chunks are generated inside
+@@ -232,10 +203,14 @@ public class ChunkProviderServer implements IChunkProvider {
+             world.timings.syncChunkLoadTimer.stopTiming(); // Spigot
+         }
+ 
+-        this.unloadQueue.remove(LongHash.toLong(i, j)); // SportPaper
+         return chunk;
+     }
+ 
++    public boolean isChunkGenerated(int x, int z) {
++        return this.chunks.containsKey(ChunkCoordIntPair.asLong(x, z)) || ((ChunkRegionLoader)this.chunkLoader).chunkExists(world, x, z);
++    }
++
++
+     public Chunk getOrCreateChunk(int i, int j) {
+         // CraftBukkit start
+         Chunk chunk = (Chunk) this.chunks.get(LongHash.toLong(i, j));
+@@ -244,14 +219,11 @@ public class ChunkProviderServer implements IChunkProvider {
+ 
+         if (chunk == emptyChunk) return chunk;
+         if (i != chunk.locX || j != chunk.locZ) {
+-            // Paper start
+-            String msg = "Chunk (" + chunk.locX + ", " + chunk.locZ + ") stored at  (" + i + ", " + j + ") in world '" + world.getWorld().getName() + "'";
+-            b.error(msg);
++            b.error("Chunk (" + chunk.locX + ", " + chunk.locZ + ") stored at  (" + i + ", " + j + ") in world '" + world.getWorld().getName() + "'");
+             b.error(chunk.getClass().getName());
+-            ServerInternalException ex = new ServerInternalException(msg);
++            Throwable ex = new Throwable();
++            ex.fillInStackTrace();
+             ex.printStackTrace();
+-            Bukkit.getPluginManager().callEvent(new ServerExceptionEvent(ex));
+-            // Paper end
+         }
+ 
+         return chunk;
+@@ -276,11 +248,7 @@ public class ChunkProviderServer implements IChunkProvider {
+ 
+                 return chunk;
+             } catch (Exception exception) {
+-                // Paper start
+-                String msg = "Couldn\'t load chunk";
+-                ChunkProviderServer.b.error(msg, exception);
+-                ServerInternalException.reportInternalException(exception);
+-                // Paper end
++                ChunkProviderServer.b.error("Couldn\'t load chunk", exception);
+                 return null;
+             }
+         }
+@@ -341,7 +309,7 @@ public class ChunkProviderServer implements IChunkProvider {
+                 BlockSand.instaFall = false;
+                 this.world.getServer().getPluginManager().callEvent(new org.bukkit.event.world.ChunkPopulateEvent(chunk.bukkitChunk));
+                 // CraftBukkit end
+-                
++
+                 chunk.e();
+             }
+         }
+@@ -376,7 +344,7 @@ public class ChunkProviderServer implements IChunkProvider {
+                 this.saveChunk(chunk);
+                 chunk.f(false);
+                 ++i;
+-                if (!flag && i >= world.paperSpigotConfig.maxAutoSaveChunksPerTick) { // Spigot - // Paper - Incremental Auto Save - cap max per tick
++                if (i == 24 && !flag && false) { // Spigot
+                     return false;
+                 }
+             }
+@@ -392,9 +360,8 @@ public class ChunkProviderServer implements IChunkProvider {
+ 
+     }
+ 
+-    // SportPaper start
+     public void unloadAllChunks() {
+-        for(Chunk chunk : chunks.values()) {
++        for (Chunk chunk : chunks.values()) {
+             unloadChunk(chunk);
+         }
+     }
+@@ -409,14 +376,15 @@ public class ChunkProviderServer implements IChunkProvider {
+         server.getPluginManager().callEvent(event);
+         if (!event.isCancelled()) {
+ 
+-            chunk.removeEntities();
+-            this.saveChunk(chunk);
+-            this.saveChunkNOP(chunk);
+-            this.chunks.remove(chunk.chunkKey); // CraftBukkit
+-            if (!auto && this.unloadQueue.contains(chunk.chunkKey)) {
+-                this.unloadQueue.remove(chunk.chunkKey);
++            if (chunk != null) {
++                chunk.removeEntities();
++                this.saveChunk(chunk);
++                this.saveChunkNOP(chunk);
++                this.chunks.remove(chunk.chunkKey); // CraftBukkit
+             }
+ 
++            // this.unloadQueue.remove(olong);
++
+             // Update neighbor counts
+             for (int x = -2; x < 3; x++) {
+                 for (int z = -2; z < 3; z++) {
+@@ -433,21 +401,20 @@ public class ChunkProviderServer implements IChunkProvider {
+             }
+         }
+     }
+-    // SportPaper end
+ 
+     public boolean unloadChunks() {
+         if (!this.world.savingDisabled) {
+             // CraftBukkit start
+             Server server = this.world.getServer();
+-            // SportPaper start
++            // TacoSpigot start - use iterator for unloadQueue
+             LongIterator iterator = unloadQueue.iterator();
+             for (int i = 0; i < 100 && iterator.hasNext(); ++i) {
+-                long chunkcoordinates = iterator.nextLong();
++                long chunkcoordinates = iterator.next();
+                 iterator.remove();
+-                // SportPaper end
++                // TacoSpigot end
+                 Chunk chunk = this.chunks.get(chunkcoordinates);
+                 if (chunk == null) continue;
+-                unloadChunk(chunk, true); // SportPaper - Move to own method
++                unloadChunk(chunk, true);
+             }
+             // CraftBukkit end
+ 
+@@ -486,4 +453,4 @@ public class ChunkProviderServer implements IChunkProvider {
+     public Chunk getChunkAt(BlockPosition blockposition) {
+         return this.getOrCreateChunk(blockposition.getX() >> 4, blockposition.getZ() >> 4);
+     }
+-}
++}
+\ No newline at end of file
+diff --git a/src/main/java/org/bukkit/craftbukkit/CraftWorld.java b/src/main/java/org/bukkit/craftbukkit/CraftWorld.java
+index a3fec8d3..75acb361 100644
+--- a/src/main/java/org/bukkit/craftbukkit/CraftWorld.java
++++ b/src/main/java/org/bukkit/craftbukkit/CraftWorld.java
+@@ -235,7 +235,7 @@ public class CraftWorld implements World {
+     }
+ 
+     public boolean unloadChunk(int x, int z) {
+-        return unloadChunkRequest(x, z); // SportPaper
++        return unloadChunk(x, z);
+     }
+ 
+     public boolean unloadChunk(int x, int z, boolean save) {
+-- 
+2.22.1
+
