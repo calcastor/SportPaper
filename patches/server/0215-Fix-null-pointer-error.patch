@@ -1,0 +1,47 @@
+From 7a3060e7cd70e1b8ec13ad4de8658ee2b3e0b831 Mon Sep 17 00:00:00 2001
+From: halfmaster1 <ohpointfive@gmail.com>
+Date: Tue, 14 Sep 2021 22:22:38 -0400
+Subject: [PATCH] Fix null pointer error
+
+
+diff --git a/src/main/java/net/minecraft/server/ChunkProviderServer.java b/src/main/java/net/minecraft/server/ChunkProviderServer.java
+index 8df6b49b..be0d944d 100644
+--- a/src/main/java/net/minecraft/server/ChunkProviderServer.java
++++ b/src/main/java/net/minecraft/server/ChunkProviderServer.java
+@@ -199,9 +199,9 @@ public class ChunkProviderServer implements IChunkProvider {
+             }
+ 
+             this.chunks.put(LongHash.toLong(i, j), chunk);
+-            
++
+             chunk.addEntities();
+-            
++
+             // CraftBukkit start
+             Server server = world.getServer();
+             if (server != null) {
+@@ -341,7 +341,7 @@ public class ChunkProviderServer implements IChunkProvider {
+                 BlockSand.instaFall = false;
+                 this.world.getServer().getPluginManager().callEvent(new org.bukkit.event.world.ChunkPopulateEvent(chunk.bukkitChunk));
+                 // CraftBukkit end
+-                
++
+                 chunk.e();
+             }
+         }
+@@ -456,7 +456,11 @@ public class ChunkProviderServer implements IChunkProvider {
+             }
+         }
+ 
+-        return this.chunkProvider.unloadChunks();
++        // SportPaper - Only unload if chunkProvider isn't null
++        if (this.chunkProvider != null) {
++            return this.chunkProvider.unloadChunks();
++        }
++        return true;
+     }
+ 
+     public boolean canSave() {
+-- 
+2.29.2
+

@@ -1,0 +1,66 @@
+From df05d79df919a61d563464bd8c0cde830e36c025 Mon Sep 17 00:00:00 2001
+From: halfmaster1 <ohpointfive@gmail.com>
+Date: Mon, 30 Aug 2021 14:46:12 -0400
+Subject: [PATCH] Fix damage printing
+
+
+diff --git a/src/main/java/net/minecraft/server/EntityLiving.java b/src/main/java/net/minecraft/server/EntityLiving.java
+index f311373f..35444188 100644
+--- a/src/main/java/net/minecraft/server/EntityLiving.java
++++ b/src/main/java/net/minecraft/server/EntityLiving.java
+@@ -912,7 +912,7 @@ public abstract class EntityLiving extends Entity {
+ 
+             if (this.ba() && this.world.getGameRules().getBoolean("doMobLoot")) {
+                 this.drops = new ArrayList<org.bukkit.inventory.ItemStack>(); // CraftBukkit - Setup drop capture
+-                
++
+                 this.dropDeathLoot(this.lastDamageByPlayerTime > 0, i);
+                 this.dropEquipment(this.lastDamageByPlayerTime > 0, i);
+                 if (this.lastDamageByPlayerTime > 0 && this.random.nextFloat() < 0.025F + (float) i * 0.01F) {
+@@ -1077,7 +1077,7 @@ public abstract class EntityLiving extends Entity {
+             int i;
+             int j;
+             float f1;
+-            
++
+             // CraftBukkit - Moved to d(DamageSource, float)
+             if (false && this.hasEffect(MobEffectList.RESISTANCE) && damagesource != DamageSource.OUT_OF_WORLD) {
+                 i = (this.getEffect(MobEffectList.RESISTANCE).getAmplifier() + 1) * 5;
+@@ -1208,6 +1208,10 @@ public abstract class EntityLiving extends Entity {
+                 // CraftBukkit end
+                 float f2 = this.getHealth();
+ 
++                if (PaperSpigotConfig.printDamage) {
++                    org.bukkit.Bukkit.broadcastMessage("Damage: " + (f / 2.0f) + "§4❤");
++                }
++
+                 this.setHealth(f2 - f);
+                 this.bs().a(damagesource, f2, f);
+                 // CraftBukkit start
+diff --git a/src/main/java/net/minecraft/server/EntityPlayer.java b/src/main/java/net/minecraft/server/EntityPlayer.java
+index ed0a56cc..4a8962db 100644
+--- a/src/main/java/net/minecraft/server/EntityPlayer.java
++++ b/src/main/java/net/minecraft/server/EntityPlayer.java
+@@ -207,7 +207,7 @@ public class EntityPlayer extends EntityHuman implements ICrafting {
+         if (this.noDamageTicks > 0) {
+             --this.noDamageTicks;
+         }
+-        
++
+         // PaperSpigot start - Configurable container update tick rate
+         if (--containerUpdateDelay <= 0) {
+             this.activeContainer.b();
+@@ -512,10 +512,6 @@ public class EntityPlayer extends EntityHuman implements ICrafting {
+                     }
+                 }
+ 
+-                if (PaperSpigotConfig.printDamage) {
+-                    org.bukkit.Bukkit.broadcastMessage("Damage: " + (f / 2.0f) + "§4❤");
+-                }
+-
+                 return super.damageEntity(damagesource, f);
+             }
+         }
+-- 
+2.29.2
+

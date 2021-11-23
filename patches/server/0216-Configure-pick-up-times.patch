@@ -1,0 +1,114 @@
+From 13c31d86359ea51f22be5452154351cd059751cc Mon Sep 17 00:00:00 2001
+From: halfmaster1 <ohpointfive@gmail.com>
+Date: Tue, 23 Nov 2021 00:45:02 -0500
+Subject: [PATCH] Configure pick up times
+
+
+diff --git a/src/main/java/net/minecraft/server/EntityHuman.java b/src/main/java/net/minecraft/server/EntityHuman.java
+index ef182d42..301c92ab 100644
+--- a/src/main/java/net/minecraft/server/EntityHuman.java
++++ b/src/main/java/net/minecraft/server/EntityHuman.java
+@@ -8,6 +8,7 @@ import java.util.Iterator;
+ import java.util.List;
+ import java.util.UUID;
+ 
++import org.bukkit.Bukkit;
+ // CraftBukkit start
+ import org.bukkit.craftbukkit.entity.CraftHumanEntity;
+ import org.bukkit.craftbukkit.entity.CraftItem;
+@@ -596,7 +597,7 @@ public abstract class EntityHuman extends EntityLiving {
+             double d0 = this.locY - 0.30000001192092896D + (double) this.getHeadHeight();
+             EntityItem entityitem = new EntityItem(this.world, this.locX, d0, this.locZ, itemstack);
+ 
+-            entityitem.a(40);
++            entityitem.a(PaperSpigotConfig.dropPickupDelay);
+             if (flag1) {
+                 entityitem.c(this.getName());
+             }
+diff --git a/src/main/java/net/minecraft/server/EntityItem.java b/src/main/java/net/minecraft/server/EntityItem.java
+index c0e756c6..a388c5d3 100644
+--- a/src/main/java/net/minecraft/server/EntityItem.java
++++ b/src/main/java/net/minecraft/server/EntityItem.java
+@@ -4,6 +4,7 @@ import java.util.Iterator;
+ import org.apache.logging.log4j.LogManager;
+ import org.apache.logging.log4j.Logger;
+ import org.bukkit.event.player.PlayerPickupItemEvent; // CraftBukkit
++import org.github.paperspigot.PaperSpigotConfig;
+ 
+ public class EntityItem extends Entity {
+ 
+@@ -422,7 +423,7 @@ public class EntityItem extends Entity {
+     }
+ 
+     public void p() {
+-        this.pickupDelay = 10;
++        this.pickupDelay = PaperSpigotConfig.breakPickupDelay;
+     }
+ 
+     public void q() {
+diff --git a/src/main/java/org/bukkit/craftbukkit/CraftWorld.java b/src/main/java/org/bukkit/craftbukkit/CraftWorld.java
+index a3fec8d3..218f038a 100644
+--- a/src/main/java/org/bukkit/craftbukkit/CraftWorld.java
++++ b/src/main/java/org/bukkit/craftbukkit/CraftWorld.java
+@@ -394,7 +394,7 @@ public class CraftWorld implements World {
+         Validate.notNull(item, "Cannot drop a Null item.");
+         Validate.isTrue(item.getTypeId() != 0, "Cannot drop AIR.");
+         EntityItem entity = new EntityItem(world, loc.getX(), loc.getY(), loc.getZ(), CraftItemStack.asNMSCopy(item));
+-        entity.pickupDelay = 10;
++        entity.pickupDelay = PaperSpigotConfig.diePickupDelay;
+         world.addEntity(entity);
+         // TODO this is inconsistent with how Entity.getBukkitEntity() works.
+         // However, this entity is not at the moment backed by a server entity class so it may be left.
+@@ -1262,7 +1262,7 @@ public class CraftWorld implements World {
+             }
+ 
+             EnumDirection dir = CraftBlock.blockFaceToNotch(face).opposite();
+-            
++
+             if (Painting.class.isAssignableFrom(clazz)) {
+                 entity = new EntityPainting(world, new BlockPosition((int) x, (int) y, (int) z), dir);
+             } else if (ItemFrame.class.isAssignableFrom(clazz)) {
+@@ -1660,12 +1660,12 @@ public class CraftWorld implements World {
+                     if ( effect.getName().startsWith( p.b().replace("_", "") ) )
+                     {
+                         particle = p;
+-                        if ( effect.getData() != null ) 
++                        if ( effect.getData() != null )
+                         {
+                             if ( effect.getData().equals( org.bukkit.Material.class ) )
+                             {
+                                 extra = new int[]{ id };
+-                            } else 
++                            } else
+                             {
+                                 extra = new int[]{ (data << 12) | (id & 0xFFF) };
+                             }
+diff --git a/src/main/java/org/github/paperspigot/PaperSpigotConfig.java b/src/main/java/org/github/paperspigot/PaperSpigotConfig.java
+index 004d980b..5af2b05e 100644
+--- a/src/main/java/org/github/paperspigot/PaperSpigotConfig.java
++++ b/src/main/java/org/github/paperspigot/PaperSpigotConfig.java
+@@ -143,6 +143,21 @@ public class PaperSpigotConfig
+         criticalHitMultiplier = (float) getDouble("settings.critical-hit-multiplier", (double) criticalHitMultiplier);
+     }
+ 
++    public static int dropPickupDelay = 40;
++    private static void dropPickupDelay() {
++        dropPickupDelay = getInt("settings.drop-pickup-delay", dropPickupDelay);
++    }
++
++    public static int breakPickupDelay = 10;
++    private static void breakPickupDelay() {
++        breakPickupDelay = getInt("settings.break-pickup-delay", breakPickupDelay);
++    }
++
++    public static int diePickupDelay = 10;
++    private static void diePickupDelay() {
++        diePickupDelay = getInt("settings.die-pickup-delay", diePickupDelay);
++    }
++
+     public static boolean enchantmentRandomProtection = true;
+     private static void enchantmentRandomProtection() {
+         enchantmentRandomProtection = getBoolean("settings.enchantment-random-protection", enchantmentRandomProtection);
+-- 
+2.29.2
+
