@@ -1,0 +1,92 @@
+From 710d279600c8d9e452d016910792e420f81d13ff Mon Sep 17 00:00:00 2001
+From: halfmaster1 <ohpointfive@gmail.com>
+Date: Thu, 25 Nov 2021 15:47:35 -0500
+Subject: [PATCH] Improve ticking logic
+
+
+diff --git a/src/main/java/net/minecraft/server/MinecraftServer.java b/src/main/java/net/minecraft/server/MinecraftServer.java
+index 87bb6542..bec72b91 100644
+--- a/src/main/java/net/minecraft/server/MinecraftServer.java
++++ b/src/main/java/net/minecraft/server/MinecraftServer.java
+@@ -661,7 +661,7 @@ public abstract class MinecraftServer implements Runnable, ICommandListener, IAs
+         }
+     }
+     // PaperSpigot End
+- 
++
+     public void run() {
+         try {
+             if (this.init()) {
+@@ -676,34 +676,32 @@ public abstract class MinecraftServer implements Runnable, ICommandListener, IAs
+                 // PaperSpigot start - Further improve tick loop
+                 Arrays.fill( recentTps, 20 );
+                 //long lastTick = System.nanoTime(), catchupTime = 0, curTime, wait, tickSection = lastTick;
+-                long start = System.nanoTime(), lastTick = start - TICK_TIME, catchupTime = 0, curTime, wait, tickSection = start;
+-                // PaperSpigot end
++                // PaperSpigot start - rewrite tick timing logic
++                long start = System.nanoTime();
++                long tickSection = start;
++                long curTime;
++                long nextTick = start;
++                long wait;
+                 while (this.isRunning) {
++
+                     curTime = System.nanoTime();
+-                    // PaperSpigot start - Further improve tick loop
+-                    wait = TICK_TIME - (curTime - lastTick);
+-                    if (wait > 0) {
+-                        // SportPaper start - fix the tick loop improvements
+-                        if (catchupTime < 2E6) {
+-                            wait += Math.abs(catchupTime);
+-                        } else if (wait < catchupTime) {
+-                            catchupTime -= wait;
+-                            wait = 0;
+-                        } else {
+-                            wait -= catchupTime;
+-                            catchupTime = 0;
+-                        }
+-                        // SportPaper end
+-                    }
+-                    if (wait > 0) {
++                    wait = nextTick - curTime;
++
++                    // If we're a bit ahead, don't bother sleeping, just run a bit ahead, hence the 2e6 (2 ms)
++                    if (wait > 2e6) {
+                         if (!doSuspension()) {
+                             Thread.sleep(wait / 1000000);
+                         }
+                         curTime = System.nanoTime();
+-                        wait = TICK_TIME - (curTime - lastTick);
+                     }
+ 
+-                    catchupTime = Math.min(MAX_CATCHUP_BUFFER, catchupTime - wait);
++                    // If we're too far behind, give up on trying to catch up and note it in the log.
++                    if (wait < -TICK_TIME * 2) {
++                        System.out.println("Server is lagging - skipping " + (((double) -wait) / TICK_TIME) + " ticks");
++                        nextTick = curTime;
++                    }
++
++                    nextTick += TICK_TIME;
+ 
+                     if ( ++MinecraftServer.currentTick % SAMPLE_INTERVAL == 0 )
+                     {
+@@ -719,7 +717,6 @@ public abstract class MinecraftServer implements Runnable, ICommandListener, IAs
+                         tickSection = curTime;
+                         // PaperSpigot end
+                     }
+-                    lastTick = curTime;
+ 
+                     this.A();
+                     this.Q = true;
+@@ -1372,7 +1369,7 @@ public abstract class MinecraftServer implements Runnable, ICommandListener, IAs
+         for (int i = 0; i < this.worlds.size(); ++i) {
+             WorldServer worldserver = this.worlds.get(i);
+             // CraftBukkit end
+-            
++
+             if (worldserver != null) {
+                 worldserver.saveLevel();
+             }
+-- 
+2.29.2
+

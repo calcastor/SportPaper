@@ -1,0 +1,34 @@
+From c8e828464bb7b96d7320b46c3502dc1494aefb78 Mon Sep 17 00:00:00 2001
+From: halfmaster1 <ohpointfive@gmail.com>
+Date: Tue, 4 Jan 2022 15:04:19 -0500
+Subject: [PATCH] Fix player lookup
+
+Originally by William Jeffcock <jeffcockw@gmail.com>
+and can be found here:
+https://github.com/Electroid/SportPaper/blob/master/patches/server/0205-Fix-getPlayer-not-respecting-viewer-when-looking-for.patch
+
+diff --git a/src/main/java/org/bukkit/craftbukkit/CraftServer.java b/src/main/java/org/bukkit/craftbukkit/CraftServer.java
+index 1a92092b..401ce465 100644
+--- a/src/main/java/org/bukkit/craftbukkit/CraftServer.java
++++ b/src/main/java/org/bukkit/craftbukkit/CraftServer.java
+@@ -360,7 +360,7 @@ public final class CraftServer implements Server {
+     public Player getPlayer(final String name, final CommandSender viewer) {
+         Validate.notNull(name, "Name cannot be null");
+ 
+-        Player found = getPlayerExact(name);
++        Player found = getPlayerExact(name, viewer);
+         // Try for an exact match first.
+         if (found != null) {
+             return found;
+@@ -1319,7 +1319,7 @@ public final class CraftServer implements Server {
+ 
+         for (JsonListEntry entry : playerList.getProfileBans().getValues()) {
+             result.add(getOfflinePlayer((GameProfile) entry.getKey()));
+-        }        
++        }
+ 
+         return result;
+     }
+-- 
+2.29.2
+

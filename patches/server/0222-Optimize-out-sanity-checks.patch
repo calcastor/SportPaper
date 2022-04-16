@@ -1,0 +1,30 @@
+From 3024364953b1181072d0b1968f95342d0ac8a6ae Mon Sep 17 00:00:00 2001
+From: halfmaster1 <ohpointfive@gmail.com>
+Date: Tue, 4 Jan 2022 15:06:21 -0500
+Subject: [PATCH] Optimize out sanity checks
+
+Originally by
+Pablete1234 <pabloherrerapalacio@gmail.com>
+and can be found here:
+https://github.com/Electroid/SportPaper/blob/master/patches/server/0207-Optimize-toLegacyData-removing-sanity-checks.patch
+
+diff --git a/src/main/java/net/minecraft/server/Block.java b/src/main/java/net/minecraft/server/Block.java
+index db09989e..33bfcc2a 100644
+--- a/src/main/java/net/minecraft/server/Block.java
++++ b/src/main/java/net/minecraft/server/Block.java
+@@ -158,11 +158,7 @@ public class Block {
+     }
+ 
+     public int toLegacyData(IBlockData iblockdata) {
+-        if (iblockdata != null && !iblockdata.a().isEmpty()) {
+-            throw new IllegalArgumentException("Don\'t know how to convert " + iblockdata + " back into data...");
+-        } else {
+-            return 0;
+-        }
++        return 0;
+     }
+ 
+     public IBlockData updateState(IBlockData iblockdata, IBlockAccess iblockaccess, BlockPosition blockposition) {
+-- 
+2.29.2
+

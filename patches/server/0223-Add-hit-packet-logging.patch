@@ -1,0 +1,308 @@
+From 8d346b0b83bb2b3f34047e125e8bdd83f999761c Mon Sep 17 00:00:00 2001
+From: halfmaster1 <ohpointfive@gmail.com>
+Date: Sat, 9 Apr 2022 18:46:46 -0400
+Subject: [PATCH] Add hit packet logging
+
+
+diff --git a/src/main/java/net/minecraft/server/EntityHuman.java b/src/main/java/net/minecraft/server/EntityHuman.java
+index 301c92ab..d0a8bd8b 100644
+--- a/src/main/java/net/minecraft/server/EntityHuman.java
++++ b/src/main/java/net/minecraft/server/EntityHuman.java
+@@ -469,7 +469,7 @@ public abstract class EntityHuman extends EntityLiving {
+                     this.d(entity);
+                 }
+             }
+-            } // Spigot 
++            } // Spigot
+         }
+ 
+     }
+@@ -798,13 +798,17 @@ public abstract class EntityHuman extends EntityLiving {
+     }
+ 
+     public boolean damageEntity(DamageSource damagesource, float f) {
++        System.out.println("[hd]    Starting damageEntity in EntityHuman");
+         if (this.isInvulnerable(damagesource)) {
++            System.out.println("[hd]    Cancelled in EntityHuman duel to invulnerability");
+             return false;
+         } else if (this.abilities.isInvulnerable && !damagesource.ignoresInvulnerability()) {
++            System.out.println("[hd]    Cancelled in EntityHuman duel to invulnerability 2");
+             return false;
+         } else {
+             this.ticksFarFromPlayer = 0;
+             if (this.getHealth() <= 0.0F) {
++                System.out.println("[hd]    Cancelled in EntityHuman duel to low health");
+                 return false;
+             } else {
+                 if (this.isSleeping() && !this.world.isClientSide) {
+@@ -813,6 +817,7 @@ public abstract class EntityHuman extends EntityLiving {
+ 
+                 if (damagesource.r()) {
+                     if (this.world.getDifficulty() == EnumDifficulty.PEACEFUL) {
++                        System.out.println("[hd]    Cancelled in EntityHuman duel to peaceful");
+                         return false; // CraftBukkit - f = 0.0f -> return false
+                     }
+ 
+@@ -826,6 +831,7 @@ public abstract class EntityHuman extends EntityLiving {
+                 }
+ 
+                 if (false && f == 0.0F) { // CraftBukkit - Don't filter out 0 damage
++                    System.out.println("[hd]    Cancelled due to false???");
+                     return false;
+                 } else {
+                     Entity entity = damagesource.getEntity();
+@@ -834,6 +840,7 @@ public abstract class EntityHuman extends EntityLiving {
+                         entity = ((EntityArrow) entity).shooter;
+                     }
+ 
++                    System.out.println("[hd]   Going back to super from .damageEntity() in EntityHuman");
+                     return super.damageEntity(damagesource, f);
+                 }
+             }
+@@ -994,6 +1001,7 @@ public abstract class EntityHuman extends EntityLiving {
+     }
+ 
+     public void attack(Entity entity) {
++        System.out.println("[hd]    Continuing attack in super");
+         if (entity.aD()) {
+             if (!entity.l(this)) {
+                 float f = (float) this.getAttributeInstance(GenericAttributes.ATTACK_DAMAGE).getValue();
+@@ -1038,6 +1046,7 @@ public abstract class EntityHuman extends EntityLiving {
+                     double d0 = entity.motX;
+                     double d1 = entity.motY;
+                     double d2 = entity.motZ;
++                    System.out.println("[hd]    Damaging now");
+                     boolean flag2 = entity.damageEntity(DamageSource.playerAttack(this), f);
+ 
+                     if (flag2) {
+@@ -1055,6 +1064,7 @@ public abstract class EntityHuman extends EntityLiving {
+                         }
+ 
+                         if (entity instanceof EntityPlayer && entity.velocityChanged) {
++                            System.out.println("[hd]    Starting KB");
+                             // CraftBukkit start - Add Velocity Event
+                             boolean cancelled = false;
+                             Player player = (Player) entity.getBukkitEntity();
+@@ -1064,8 +1074,10 @@ public abstract class EntityHuman extends EntityLiving {
+                             world.getServer().getPluginManager().callEvent(event);
+ 
+                             if (event.isCancelled()) {
++                                System.out.println("[hd]    KB cancelled");
+                                 cancelled = true;
+                             } else if (!velocity.equals(event.getVelocity())) {
++                                System.out.println("[hd]    KB applied");
+                                 player.setVelocity(event.getVelocity());
+                             }
+ 
+@@ -1132,11 +1144,20 @@ public abstract class EntityHuman extends EntityLiving {
+ 
+                         this.applyExhaustion(world.spigotConfig.combatExhaustion); // Spigot - Change to use configurable value
+                     } else if (flag1) {
++                        System.out.println("[hd]    Extinguishing?");
+                         entity.extinguish();
++                    } else {
++                        System.out.println("[hd]    Damage failed, no knockback");
+                     }
++                } else {
++                    System.out.println("[hd]    Not enough damage to count");
+                 }
+ 
++            } else {
++                System.out.println("[hd]    Failed l(this)");
+             }
++        } else {
++            System.out.println("[hd]    Failed aD()");
+         }
+     }
+ 
+diff --git a/src/main/java/net/minecraft/server/EntityLiving.java b/src/main/java/net/minecraft/server/EntityLiving.java
+index 35444188..a049d9f4 100644
+--- a/src/main/java/net/minecraft/server/EntityLiving.java
++++ b/src/main/java/net/minecraft/server/EntityLiving.java
+@@ -747,15 +747,20 @@ public abstract class EntityLiving extends Entity {
+     }
+ 
+     public boolean damageEntity(DamageSource damagesource, float f) {
++        System.out.println("[hd]    Starting in damageEntity in EntityLiving");
+         if (this.isInvulnerable(damagesource)) {
++            System.out.println("[hd]    Rejected due to invulnerability");
+             return false;
+         } else if (this.world.isClientSide) {
++            System.out.println("[hd]    Rejected due to client side world");
+             return false;
+         } else {
+             this.ticksFarFromPlayer = 0;
+             if (this.getHealth() <= 0.0F) {
++                System.out.println("[hd]    Rejected due to dead opponent");
+                 return false;
+             } else if (damagesource.o() && this.hasEffect(MobEffectList.FIRE_RESISTANCE)) {
++                System.out.println("[hd]    Rejected due to fire resistance");
+                 return false;
+             } else {
+                 // CraftBukkit - Moved into d(DamageSource, float)
+@@ -770,11 +775,13 @@ public abstract class EntityLiving extends Entity {
+                 if ((float) this.noDamageTicks > (float) this.maxNoDamageTicks / 2.0F) {
+                     if (f <= this.lastDamage) {
+                         this.forceExplosionKnockback = true; // CraftBukkit - SPIGOT-949 - for vanilla consistency, cooldown does not prevent explosion knockback
++                        System.out.println("[hd]    Rejected due damage tick");
+                         return false;
+                     }
+ 
+                     // CraftBukkit start
+                     if (!this.d(damagesource, f - this.lastDamage)) {
++                        System.out.println("[hd]    Reduced (?) and rejected due to damage tick");
+                         return false;
+                     }
+                     // CraftBukkit end
+@@ -784,6 +791,7 @@ public abstract class EntityLiving extends Entity {
+                     // CraftBukkit start
+                     float previousHealth = this.getHealth();
+                     if (!this.d(damagesource, f)) {
++                        System.out.println("[hd]    Rejected by .d()");
+                         return false;
+                     }
+                     this.lastDamage = f;
+@@ -840,14 +848,19 @@ public abstract class EntityLiving extends Entity {
+                             d0 = (Math.random() - Math.random()) * 0.01D;
+                         }
+ 
++                        System.out.println("[hd]    Applying knockback I think");
+                         this.aw = (float) (MathHelper.b(d1, d0) * 180.0D / 3.1415927410125732D - (double) this.yaw);
+                         damagesource.knockbackEventCalled = this.a(entity, f, d0, d1); // SportPaper
+                     } else {
++                        System.out.println("[hd]    Applying knockback from a null entity");
+                         this.aw = (float) ((int) (Math.random() * 2.0D) * 180);
+                     }
+                 }
+ 
+-                if (knockbackCancelled) this.world.broadcastEntityEffect(this, (byte) 2); // PaperSpigot
++                if (knockbackCancelled) {
++                    System.out.println("[hd]    Knockback was cancelled");
++                    this.world.broadcastEntityEffect(this, (byte) 2); // PaperSpigot
++                }
+ 
+                 String s;
+ 
+@@ -857,6 +870,7 @@ public abstract class EntityLiving extends Entity {
+                         this.makeSound(s, this.bB(), this.bC());
+                     }
+ 
++                    System.out.println("[hd]    Killed on hit");
+                     this.die(damagesource);
+                 } else {
+                     s = this.bo();
+@@ -865,6 +879,7 @@ public abstract class EntityLiving extends Entity {
+                     }
+                 }
+ 
++                System.out.println("[hd]    Hit successful");
+                 return true;
+             }
+         }
+@@ -1179,6 +1194,7 @@ public abstract class EntityLiving extends Entity {
+ 
+             EntityDamageEvent event = CraftEventFactory.handleLivingEntityDamageEvent(this, damagesource, originalDamage, hardHatModifier, blockingModifier, armorModifier, resistanceModifier, magicModifier, absorptionModifier, hardHat, blocking, armor, resistance, magic, absorption);
+             if (event.isCancelled()) {
++                System.out.println("[hd]    .d() in EntityLiving got a cancelled event");
+                 return false;
+             }
+ 
+@@ -1221,8 +1237,10 @@ public abstract class EntityLiving extends Entity {
+                 // CraftBukkit end
+                 this.setAbsorptionHearts(this.getAbsorptionHearts() - f);
+             }
++            System.out.println("[hd]    Successfully got out of .d() in EntityLiving");
+             return true; // CraftBukkit
+         }
++        System.out.println("[hd]    Cancelled due to invulnerability .d() in EntityLiving");
+         return false; // CraftBukkit
+     }
+ 
+diff --git a/src/main/java/net/minecraft/server/EntityPlayer.java b/src/main/java/net/minecraft/server/EntityPlayer.java
+index 4a8962db..1b8e96d0 100644
+--- a/src/main/java/net/minecraft/server/EntityPlayer.java
++++ b/src/main/java/net/minecraft/server/EntityPlayer.java
+@@ -1101,9 +1101,12 @@ public class EntityPlayer extends EntityHuman implements ICrafting {
+     }
+ 
+     public void attack(Entity entity) {
++        System.out.println("[hd]=== Starting attack ===");
+         if (this.playerInteractManager.getGameMode() == WorldSettings.EnumGamemode.SPECTATOR) {
++            System.out.println("[hd]    Was a spectator thing");
+             this.setSpectatorTarget(entity);
+         } else {
++            System.out.println("[hd]    Continuing attack");
+             super.attack(entity);
+         }
+ 
+diff --git a/src/main/java/net/minecraft/server/PlayerConnection.java b/src/main/java/net/minecraft/server/PlayerConnection.java
+index fde31c77..bd30cbde 100644
+--- a/src/main/java/net/minecraft/server/PlayerConnection.java
++++ b/src/main/java/net/minecraft/server/PlayerConnection.java
+@@ -32,7 +32,6 @@ import org.bukkit.craftbukkit.inventory.CraftItemStack;
+ import org.bukkit.craftbukkit.util.CraftChatMessage;
+ import org.bukkit.craftbukkit.util.LazyPlayerSet;
+ import org.bukkit.craftbukkit.util.Waitable;
+-
+ import org.bukkit.Location;
+ import org.bukkit.entity.Player;
+ import org.bukkit.event.Event;
+@@ -1450,13 +1449,18 @@ public class PlayerConnection implements PacketListenerPlayIn, IUpdatePlayerList
+     }
+ 
+     public void a(PacketPlayInUseEntity packetplayinuseentity) {
+-        if (this.player.dead) return; // CraftBukkit
++        System.out.println("[hd]=== Got a packet from " + this.player.getName() + " ===");
++        if (this.player.dead) {
++            System.out.println("[hd]    Rejected packet from dead player");
++            return; // CraftBukkit
++        }
+         PlayerConnectionUtils.ensureMainThread(packetplayinuseentity, this, this.player.u());
+         WorldServer worldserver = this.minecraftServer.getWorldServer(this.player.dimension);
+         Entity entity = packetplayinuseentity.a((World) worldserver);
+         // Spigot Start
+         if ( entity == player && !player.isSpectator() )
+         {
++            System.out.println("[hd]    Stop hitting yourself");
+             disconnect( "Cannot interact with self!" );
+             return;
+         }
+@@ -1521,7 +1525,9 @@ public class PlayerConnection implements PacketListenerPlayIn, IUpdatePlayerList
+                     }
+                     // CraftBukkit end
+                 } else if (packetplayinuseentity.a() == PacketPlayInUseEntity.EnumEntityUseAction.ATTACK) {
++                    System.out.println("[hd]    It was an attack!");
+                     if (entity instanceof EntityItem || entity instanceof EntityExperienceOrb || entity instanceof EntityArrow || (entity == this.player && !player.isSpectator())) { // CraftBukkit
++                        System.out.println("[hd]    Blocked for invalid entity");
+                         this.disconnect("Attempting to attack an invalid entity");
+                         this.minecraftServer.warning("Player " + this.player.getName() + " tried to attack an invalid entity");
+                         return;
+@@ -1530,7 +1536,10 @@ public class PlayerConnection implements PacketListenerPlayIn, IUpdatePlayerList
+                     // CraftBukkit start
+                     PlayerAttackEntityEvent event = new PlayerAttackEntityEvent(this.getPlayer(), entity.getBukkitEntity());
+                     this.server.getPluginManager().callEvent(event);
+-                    if(event.isCancelled()) return;
++                    if(event.isCancelled()) {
++                        System.out.println("[hd]    Cancelled by a plugin!");
++                        return;
++                    }
+                     // CraftBukkit end
+ 
+                     this.player.attack(entity);
+@@ -1541,10 +1550,13 @@ public class PlayerConnection implements PacketListenerPlayIn, IUpdatePlayerList
+                     }
+                     // CraftBukkit end
+                 }
++            } else {
++                System.out.println("[hd]    Hit was too far, so it was cancelled");
+             }
+         }
+         // Paper start - fire event
+         else {
++            System.out.println("[hd]    Hit nothing?");
+             new org.github.paperspigot.event.player.PlayerUseUnknownEntityEvent(this.getPlayer(), packetplayinuseentity.getEntityId(), packetplayinuseentity.a() == PacketPlayInUseEntity.EnumEntityUseAction.ATTACK).callEvent();
+         }
+         // Paper end
+-- 
+2.29.2
+
