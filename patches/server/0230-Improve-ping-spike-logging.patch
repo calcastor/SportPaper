@@ -1,0 +1,22 @@
+From 1bc89d8f3e4d553e86dd50d0363b34389169c02b Mon Sep 17 00:00:00 2001
+From: halfmaster1 <ohpointfive@gmail.com>
+Date: Tue, 28 Jun 2022 00:29:58 -0400
+Subject: [PATCH] Improve ping spike logging
+
+
+diff --git a/src/main/java/net/minecraft/server/PlayerConnection.java b/src/main/java/net/minecraft/server/PlayerConnection.java
+index d547e4f8..58815893 100644
+--- a/src/main/java/net/minecraft/server/PlayerConnection.java
++++ b/src/main/java/net/minecraft/server/PlayerConnection.java
+@@ -2093,7 +2093,7 @@ public class PlayerConnection implements PacketListenerPlayIn, IUpdatePlayerList
+             if (this.player.ping == 0) {
+                 this.player.ping = i;
+             } else {
+-                if (i * 100 / this.player.ping > 130) {
++                if (i * 100 / this.player.ping > 130 && i - this.player.ping > 30) {
+                     System.out.println(this.player.getName() + " ping spiked from " + this.player.ping + "ms to " + i + "ms");
+                 }
+                 this.player.ping = (this.player.ping * 3 + i) / 4;
+-- 
+2.29.2
+

@@ -1,0 +1,140 @@
+From 2cee776d8a97f40289358a500e228c3bb9d89c6c Mon Sep 17 00:00:00 2001
+From: halfmaster1 <ohpointfive@gmail.com>
+Date: Thu, 21 Apr 2022 03:43:52 -0400
+Subject: [PATCH] Separate vertical and horizontal knockback friction
+
+
+diff --git a/src/main/java/app/ashcon/sportpaper/server/KnockbackModificationCommand.java b/src/main/java/app/ashcon/sportpaper/server/KnockbackModificationCommand.java
+index 142f4268..a7445a7e 100644
+--- a/src/main/java/app/ashcon/sportpaper/server/KnockbackModificationCommand.java
++++ b/src/main/java/app/ashcon/sportpaper/server/KnockbackModificationCommand.java
+@@ -15,18 +15,19 @@ public class KnockbackModificationCommand extends Command {
+     private static final List<String> ARGUMENTS = ImmutableList.of("friction", "horizontal", "vertical", "vertical-limit", "extra-horizontal", "extra-vertical", "reset", "show");
+ 
+     // Default values
+-    private final double knockbackFriction, knockbackHorizontal, knockbackVertical, knockbackVerticalLimit,
+-            knockbackExtraHorizontal, knockbackExtraVertical;
++    private final double knockbackFrictionHorizontal, knockbackFrictionVertical, knockbackHorizontal, knockbackVertical,
++            knockbackVerticalLimit, knockbackExtraHorizontal, knockbackExtraVertical;
+ 
+-    public KnockbackModificationCommand(String name, double knockbackFriction, double knockbackHorizontal,
++    public KnockbackModificationCommand(String name, double knockbackFrictionHorizontal, double knockbackFrictionVertical, double knockbackHorizontal,
+                                         double knockbackVertical, double knockbackVerticalLimit,
+                                         double knockbackExtraHorizontal, double knockbackExtraVertical) {
+         super(name);
+         this.description = "Modify the knockback configuration";
+         this.usageMessage = "/knockback " +
+-                "<friction|horizontal|vertical|vertical-limit|extra-horizontal|extra-vertical|reset|show> <value>";
++                "<horizontal-friction|vertical-friction|horizontal|vertical|vertical-limit|extra-horizontal|extra-vertical|reset|show> <value>";
+         this.setPermission("bukkit.command.knockback");
+-        this.knockbackFriction = knockbackFriction;
++        this.knockbackFrictionHorizontal = knockbackFrictionHorizontal;
++        this.knockbackFrictionVertical = knockbackFrictionVertical;
+         this.knockbackHorizontal = knockbackHorizontal;
+         this.knockbackVertical = knockbackVertical;
+         this.knockbackVerticalLimit = knockbackVerticalLimit;
+@@ -47,10 +48,17 @@ public class KnockbackModificationCommand extends Command {
+ 
+         try {
+             switch (args[0].toLowerCase()) {
+-                case "friction": {
+-                    double oldVal = PaperSpigotConfig.knockbackFriction;
++                case "horizontal-friction": {
++                    double oldVal = PaperSpigotConfig.knockbackFrictionHorizontal;
+                     double newVal = parseValue(args);
+-                    PaperSpigotConfig.knockbackFriction = newVal;
++                    PaperSpigotConfig.knockbackFrictionHorizontal = newVal;
++                    updated(sender, "friction", oldVal, newVal);
++                    break;
++                }
++                case "vertical-friction": {
++                    double oldVal = PaperSpigotConfig.knockbackFrictionVertical;
++                    double newVal = parseValue(args);
++                    PaperSpigotConfig.knockbackFrictionVertical = newVal;
+                     updated(sender, "friction", oldVal, newVal);
+                     break;
+                 }
+@@ -90,7 +98,8 @@ public class KnockbackModificationCommand extends Command {
+                     break;
+                 }
+                 case "reset":
+-                    PaperSpigotConfig.knockbackFriction = knockbackFriction;
++                    PaperSpigotConfig.knockbackFrictionHorizontal = knockbackFrictionHorizontal;
++                    PaperSpigotConfig.knockbackFrictionVertical = knockbackFrictionVertical;
+                     PaperSpigotConfig.knockbackHorizontal = knockbackHorizontal;
+                     PaperSpigotConfig.knockbackVertical = knockbackVertical;
+                     PaperSpigotConfig.knockbackVerticalLimit = knockbackVerticalLimit;
+@@ -100,7 +109,8 @@ public class KnockbackModificationCommand extends Command {
+                     break;
+                 case "show":
+                     sender.sendMessage(ChatColor.GOLD + "Knockback Configuration");
+-                    sendValue(sender, "Friction", PaperSpigotConfig.knockbackFriction);
++                    sendValue(sender, "Horizontal Friction", PaperSpigotConfig.knockbackFrictionHorizontal);
++                    sendValue(sender, "Vertical Friction", PaperSpigotConfig.knockbackFrictionVertical);
+                     sendValue(sender, "Horizontal Knockback", PaperSpigotConfig.knockbackHorizontal);
+                     sendValue(sender, "Vertical Knockback", PaperSpigotConfig.knockbackVertical);
+                     sendValue(sender, "Vertical Limit", PaperSpigotConfig.knockbackVerticalLimit);
+diff --git a/src/main/java/net/minecraft/server/EntityLiving.java b/src/main/java/net/minecraft/server/EntityLiving.java
+index a049d9f4..f161bd6c 100644
+--- a/src/main/java/net/minecraft/server/EntityLiving.java
++++ b/src/main/java/net/minecraft/server/EntityLiving.java
+@@ -955,7 +955,8 @@ public abstract class EntityLiving extends Entity {
+             double magnitude = MathHelper.sqrt(d0 * d0 + d1 * d1);
+ 
+             double knockbackReduction = this.getBukkitEntity().getKnockbackReduction();
+-            double friction = PaperSpigotConfig.knockbackFriction - knockbackReduction;
++            double frictionHorizontal = PaperSpigotConfig.knockbackFrictionHorizontal - knockbackReduction;
++            double frictionVertical = PaperSpigotConfig.knockbackFrictionVertical - knockbackReduction;
+ 
+             double horizontalKnockback = PaperSpigotConfig.knockbackHorizontal * (1d - knockbackReduction);
+             double verticalKnockback = PaperSpigotConfig.knockbackVertical * (1d - knockbackReduction);
+@@ -965,9 +966,9 @@ public abstract class EntityLiving extends Entity {
+             double oldMotY = this.motY;
+             double oldMotZ = this.motZ;
+ 
+-            this.motX /= friction;
+-            this.motY /= friction;
+-            this.motZ /= friction;
++            this.motX /= frictionHorizontal;
++            this.motY /= frictionVertical;
++            this.motZ /= frictionHorizontal;
+ 
+             this.motX -= d0 / magnitude * horizontalKnockback;
+             this.motY += verticalKnockback;
+diff --git a/src/main/java/org/github/paperspigot/PaperSpigotConfig.java b/src/main/java/org/github/paperspigot/PaperSpigotConfig.java
+index 5af2b05e..e6b198af 100644
+--- a/src/main/java/org/github/paperspigot/PaperSpigotConfig.java
++++ b/src/main/java/org/github/paperspigot/PaperSpigotConfig.java
+@@ -257,22 +257,24 @@ public class PaperSpigotConfig
+         firePhysicsEventForRedstone = getBoolean("fire-physics-event-for-redstone", firePhysicsEventForRedstone);
+     }
+ 
+-    public static double knockbackFriction;
++    public static double knockbackFrictionHorizontal;
++    public static double knockbackFrictionVertical;
+     public static double knockbackHorizontal;
+     public static double knockbackVertical;
+     public static double knockbackVerticalLimit;
+     public static double knockbackExtraHorizontal;
+     public static double knockbackExtraVertical;
+     private static void knockback() {
+-        knockbackFriction = getDouble( "knockback.friction", 2.0D );
++        knockbackFrictionHorizontal = getDouble( "knockback.horizontal-friction", 2.0D );
++        knockbackFrictionVertical = getDouble( "knockback.vertical-friction", 2.0D );
+         knockbackHorizontal = getDouble( "knockback.horizontal", 0.4D );
+         knockbackVertical = getDouble( "knockback.vertical", 0.4D );
+         knockbackVerticalLimit = getDouble( "knockback.vertical-limit", 0.4D );
+         knockbackExtraHorizontal = getDouble( "knockback.extra-horizontal", 0.5D );
+         knockbackExtraVertical = getDouble( "knockback.extra-vertical", 0.1D );
+-        commands.put("knockback", new KnockbackModificationCommand( "knockback", knockbackFriction,
+-                knockbackHorizontal, knockbackVertical, knockbackVerticalLimit, knockbackExtraHorizontal,
+-                knockbackExtraVertical));
++        commands.put("knockback", new KnockbackModificationCommand( "knockback", knockbackFrictionHorizontal,
++                knockbackFrictionVertical, knockbackHorizontal, knockbackVertical, knockbackVerticalLimit,
++                knockbackExtraHorizontal, knockbackExtraVertical));
+     }
+ 
+ }
+-- 
+2.29.2
+
