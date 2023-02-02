@@ -1,0 +1,22 @@
+From 7938be5882c2526b25cd06cb8983f8993d30b08e Mon Sep 17 00:00:00 2001
+From: halfmaster1 <ohpointfive@gmail.com>
+Date: Tue, 30 Aug 2022 14:00:08 -0400
+Subject: [PATCH] Decrease lag buffer
+
+
+diff --git a/src/main/java/net/minecraft/server/MinecraftServer.java b/src/main/java/net/minecraft/server/MinecraftServer.java
+index bec72b91..9f43b64c 100644
+--- a/src/main/java/net/minecraft/server/MinecraftServer.java
++++ b/src/main/java/net/minecraft/server/MinecraftServer.java
+@@ -696,7 +696,7 @@ public abstract class MinecraftServer implements Runnable, ICommandListener, IAs
+                     }
+ 
+                     // If we're too far behind, give up on trying to catch up and note it in the log.
+-                    if (wait < -TICK_TIME * 2) {
++                    if (wait < -TICK_TIME) {
+                         System.out.println("Server is lagging - skipping " + (((double) -wait) / TICK_TIME) + " ticks");
+                         nextTick = curTime;
+                     }
+-- 
+2.29.2
+

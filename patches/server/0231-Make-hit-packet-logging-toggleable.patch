@@ -1,0 +1,292 @@
+From 2f8fd3369a74b08b104efd2d109dfae07e3f9765 Mon Sep 17 00:00:00 2001
+From: halfmaster1 <ohpointfive@gmail.com>
+Date: Tue, 30 Aug 2022 13:35:45 -0400
+Subject: [PATCH] Make hit packet logging toggleable
+
+
+diff --git a/src/main/java/net/minecraft/server/EntityHuman.java b/src/main/java/net/minecraft/server/EntityHuman.java
+index 5b7fe4ca..37305604 100644
+--- a/src/main/java/net/minecraft/server/EntityHuman.java
++++ b/src/main/java/net/minecraft/server/EntityHuman.java
+@@ -799,15 +799,21 @@ public abstract class EntityHuman extends EntityLiving {
+ 
+     public boolean damageEntity(DamageSource damagesource, float f) {
+         if (this.isInvulnerable(damagesource)) {
+-            System.out.println("[hd] " + (damagesource.getEntity() == null ? "null" : damagesource.getEntity().getName()) + "/" + getName() + " cancelled! EH Invulnerable.");
++            if (PaperSpigotConfig.logHits) {
++                System.out.println("[hd] " + (damagesource.getEntity() == null ? "null" : damagesource.getEntity().getName()) + "/" + getName() + " cancelled! EH Invulnerable.");
++            }
+             return false;
+         } else if (this.abilities.isInvulnerable && !damagesource.ignoresInvulnerability()) {
+-            System.out.println("[hd] " + (damagesource.getEntity() == null ? "null" : damagesource.getEntity().getName()) + "/" + getName() + " cancelled! EH Invulnerable 2.");
++            if (PaperSpigotConfig.logHits) {
++                System.out.println("[hd] " + (damagesource.getEntity() == null ? "null" : damagesource.getEntity().getName()) + "/" + getName() + " cancelled! EH Invulnerable 2.");
++            }
+             return false;
+         } else {
+             this.ticksFarFromPlayer = 0;
+             if (this.getHealth() <= 0.0F) {
+-                System.out.println("[hd] " + (damagesource.getEntity() == null ? "null" : damagesource.getEntity().getName()) + "/" + getName() + " cancelled! EH Low health.");
++                if (PaperSpigotConfig.logHits) {
++                    System.out.println("[hd] " + (damagesource.getEntity() == null ? "null" : damagesource.getEntity().getName()) + "/" + getName() + " cancelled! EH Low health.");
++                }
+                 return false;
+             } else {
+                 if (this.isSleeping() && !this.world.isClientSide) {
+@@ -816,7 +822,9 @@ public abstract class EntityHuman extends EntityLiving {
+ 
+                 if (damagesource.r()) {
+                     if (this.world.getDifficulty() == EnumDifficulty.PEACEFUL) {
+-                        System.out.println("[hd] " + (damagesource.getEntity() == null ? "null" : damagesource.getEntity().getName()) + "/" + getName() + " cancelled! EH Peaceful.");
++                        if (PaperSpigotConfig.logHits) {
++                            System.out.println("[hd] " + (damagesource.getEntity() == null ? "null" : damagesource.getEntity().getName()) + "/" + getName() + " cancelled! EH Peaceful.");
++                        }
+                         return false; // CraftBukkit - f = 0.0f -> return false
+                     }
+ 
+@@ -830,7 +838,9 @@ public abstract class EntityHuman extends EntityLiving {
+                 }
+ 
+                 if (false && f == 0.0F) { // CraftBukkit - Don't filter out 0 damage
+-                    System.out.println("[hd] " + (damagesource.getEntity() == null ? "null" : damagesource.getEntity().getName()) + "/" + getName() + " cancelled! EH False???");
++                    if (PaperSpigotConfig.logHits) {
++                        System.out.println("[hd] " + (damagesource.getEntity() == null ? "null" : damagesource.getEntity().getName()) + "/" + getName() + " cancelled! EH False???");
++                    }
+                     return false;
+                 } else {
+                     Entity entity = damagesource.getEntity();
+@@ -1069,10 +1079,14 @@ public abstract class EntityHuman extends EntityLiving {
+                             world.getServer().getPluginManager().callEvent(event);
+ 
+                             if (event.isCancelled()) {
+-                                System.out.println("[hd] " + this.getName() + "/" + entity.getName() + " cancelled! EH Knockback cancelled by plugin");
++                                if (PaperSpigotConfig.logHits) {
++                                    System.out.println("[hd] " + this.getName() + "/" + entity.getName() + " cancelled! EH Knockback cancelled by plugin");
++                                }
+                                 cancelled = true;
+                             } else if (!velocity.equals(event.getVelocity())) {
+-                                System.out.println("[hd] !" + this.getName() + "/" + entity.getName() + " succeeded! EH knockback applied!");
++                                if (PaperSpigotConfig.logHits) {
++                                    System.out.println("[hd] !" + this.getName() + "/" + entity.getName() + " succeeded! EH knockback applied!");
++                                }
+                                 player.setVelocity(event.getVelocity());
+                             }
+ 
+@@ -1141,17 +1155,25 @@ public abstract class EntityHuman extends EntityLiving {
+                     } else if (flag1) {
+                         entity.extinguish();
+                     } else {
+-                        System.out.println("[hd] " + this.getName() + "/" + entity.getName() + " cancelled! EH damage failed no KB");
++                        if (PaperSpigotConfig.logHits) {
++                            System.out.println("[hd] " + this.getName() + "/" + entity.getName() + " cancelled! EH damage failed no KB");
++                        }
+                     }
+                 } else {
+-                    System.out.println("[hd] " + this.getName() + "/" + entity.getName() + " cancelled! EH not enough damage");
++                    if (PaperSpigotConfig.logHits) {
++                        System.out.println("[hd] " + this.getName() + "/" + entity.getName() + " cancelled! EH not enough damage");
++                    }
+                 }
+ 
+             } else {
+-                System.out.println("[hd] " + this.getName() + "/" + entity.getName() + " cancelled! EH failed l");
++                if (PaperSpigotConfig.logHits) {
++                    System.out.println("[hd] " + this.getName() + "/" + entity.getName() + " cancelled! EH failed l");
++                }
+             }
+         } else {
+-            System.out.println("[hd] " + this.getName() + "/" + entity.getName() + " cancelled! EH failed aD");
++            if (PaperSpigotConfig.logHits) {
++                System.out.println("[hd] " + this.getName() + "/" + entity.getName() + " cancelled! EH failed aD");
++            }
+         }
+     }
+ 
+diff --git a/src/main/java/net/minecraft/server/EntityLiving.java b/src/main/java/net/minecraft/server/EntityLiving.java
+index f7cfaef1..8ca92189 100644
+--- a/src/main/java/net/minecraft/server/EntityLiving.java
++++ b/src/main/java/net/minecraft/server/EntityLiving.java
+@@ -748,18 +748,26 @@ public abstract class EntityLiving extends Entity {
+ 
+     public boolean damageEntity(DamageSource damagesource, float f) {
+         if (this.isInvulnerable(damagesource)) {
+-            System.out.println("[hd] " + (damagesource.getEntity() == null ? "null" : damagesource.getEntity().getName()) + "/" + getName() + " cancelled! EL invulnerable.");
++            if (PaperSpigotConfig.logHits) {
++                System.out.println("[hd] " + (damagesource.getEntity() == null ? "null" : damagesource.getEntity().getName()) + "/" + getName() + " cancelled! EL invulnerable.");
++            }
+             return false;
+         } else if (this.world.isClientSide) {
+-            System.out.println("[hd] " + (damagesource.getEntity() == null ? "null" : damagesource.getEntity().getName()) + "/" + getName() + " cancelled! EL client side.");
++            if (PaperSpigotConfig.logHits) {
++                System.out.println("[hd] " + (damagesource.getEntity() == null ? "null" : damagesource.getEntity().getName()) + "/" + getName() + " cancelled! EL client side.");
++            }
+             return false;
+         } else {
+             this.ticksFarFromPlayer = 0;
+             if (this.getHealth() <= 0.0F) {
+-                System.out.println("[hd] " + (damagesource.getEntity() == null ? "null" : damagesource.getEntity().getName()) + "/" + getName() + " cancelled! EL low health.");
++                if (PaperSpigotConfig.logHits) {
++                    System.out.println("[hd] " + (damagesource.getEntity() == null ? "null" : damagesource.getEntity().getName()) + "/" + getName() + " cancelled! EL low health.");
++                }
+                 return false;
+             } else if (damagesource.o() && this.hasEffect(MobEffectList.FIRE_RESISTANCE)) {
+-                System.out.println("[hd] " + (damagesource.getEntity() == null ? "null" : damagesource.getEntity().getName()) + "/" + getName() + " cancelled! EL fire resistance.");
++                if (PaperSpigotConfig.logHits) {
++                    System.out.println("[hd] " + (damagesource.getEntity() == null ? "null" : damagesource.getEntity().getName()) + "/" + getName() + " cancelled! EL fire resistance.");
++                }
+                 return false;
+             } else {
+                 // CraftBukkit - Moved into d(DamageSource, float)
+@@ -774,13 +782,17 @@ public abstract class EntityLiving extends Entity {
+                 if ((float) this.noDamageTicks > (float) this.maxNoDamageTicks / 2.0F) {
+                     if (f <= this.lastDamage) {
+                         this.forceExplosionKnockback = true; // CraftBukkit - SPIGOT-949 - for vanilla consistency, cooldown does not prevent explosion knockback
+-                        System.out.println("[hd] " + (damagesource.getEntity() == null ? "null" : damagesource.getEntity().getName()) + "/" + getName() + " cancelled! EL damage tick.");
++                        if (PaperSpigotConfig.logHits) {
++                            System.out.println("[hd] " + (damagesource.getEntity() == null ? "null" : damagesource.getEntity().getName()) + "/" + getName() + " cancelled! EL damage tick.");
++                        }
+                         return false;
+                     }
+ 
+                     // CraftBukkit start
+                     if (!this.d(damagesource, f - this.lastDamage)) {
+-                        System.out.println("[hd] " + (damagesource.getEntity() == null ? "null" : damagesource.getEntity().getName()) + "/" + getName() + " cancelled! EL damage tick 2.");
++                        if (PaperSpigotConfig.logHits) {
++                            System.out.println("[hd] " + (damagesource.getEntity() == null ? "null" : damagesource.getEntity().getName()) + "/" + getName() + " cancelled! EL damage tick 2.");
++                        }
+                         return false;
+                     }
+                     // CraftBukkit end
+@@ -790,7 +802,9 @@ public abstract class EntityLiving extends Entity {
+                     // CraftBukkit start
+                     float previousHealth = this.getHealth();
+                     if (!this.d(damagesource, f)) {
+-                        System.out.println("[hd] " + (damagesource.getEntity() == null ? "null" : damagesource.getEntity().getName()) + "/" + getName() + " cancelled! EL rejected by .d().");
++                        if (PaperSpigotConfig.logHits) {
++                            System.out.println("[hd] " + (damagesource.getEntity() == null ? "null" : damagesource.getEntity().getName()) + "/" + getName() + " cancelled! EL rejected by .d().");
++                        }
+                         return false;
+                     }
+                     this.lastDamage = f;
+@@ -855,7 +869,9 @@ public abstract class EntityLiving extends Entity {
+                 }
+ 
+                 if (knockbackCancelled) {
+-                    System.out.println("[hd] " + (damagesource.getEntity() == null ? "null" : damagesource.getEntity().getName()) + "/" + getName() + " cancelled! EL explosion knockback prevented");
++                    if (PaperSpigotConfig.logHits) {
++                        System.out.println("[hd] " + (damagesource.getEntity() == null ? "null" : damagesource.getEntity().getName()) + "/" + getName() + " cancelled! EL explosion knockback prevented");
++                    }
+                     this.world.broadcastEntityEffect(this, (byte) 2); // PaperSpigot
+                 }
+ 
+@@ -875,7 +891,9 @@ public abstract class EntityLiving extends Entity {
+                     }
+                 }
+ 
+-                System.out.println("[hd] !" + (damagesource.getEntity() == null ? "null" : damagesource.getEntity().getName()) + "/" + getName() + " succeeded! EL return true");
++                if (PaperSpigotConfig.logHits) {
++                    System.out.println("[hd] !" + (damagesource.getEntity() == null ? "null" : damagesource.getEntity().getName()) + "/" + getName() + " succeeded! EL return true");
++                }
+                 return true;
+             }
+         }
+@@ -1191,7 +1209,9 @@ public abstract class EntityLiving extends Entity {
+ 
+             EntityDamageEvent event = CraftEventFactory.handleLivingEntityDamageEvent(this, damagesource, originalDamage, hardHatModifier, blockingModifier, armorModifier, resistanceModifier, magicModifier, absorptionModifier, hardHat, blocking, armor, resistance, magic, absorption);
+             if (event.isCancelled()) {
+-                System.out.println("[hd] " + (damagesource.getEntity() == null ? "null" : damagesource.getEntity().getName()) + "/" + getName() + " cancelled! EL by plugin");
++                if (PaperSpigotConfig.logHits) {
++                    System.out.println("[hd] " + (damagesource.getEntity() == null ? "null" : damagesource.getEntity().getName()) + "/" + getName() + " cancelled! EL by plugin");
++                }
+                 return false;
+             }
+ 
+@@ -1236,7 +1256,9 @@ public abstract class EntityLiving extends Entity {
+             }
+             return true; // CraftBukkit
+         }
+-        System.out.println("[hd] " + (damagesource.getEntity() == null ? "null" : damagesource.getEntity().getName()) + "/" + getName() + " cancelled! EL explosion knockback prevented");
++        if (PaperSpigotConfig.logHits) {
++            System.out.println("[hd] " + (damagesource.getEntity() == null ? "null" : damagesource.getEntity().getName()) + "/" + getName() + " cancelled! EL explosion knockback prevented");
++        }
+         return false; // CraftBukkit
+     }
+ 
+diff --git a/src/main/java/net/minecraft/server/PlayerConnection.java b/src/main/java/net/minecraft/server/PlayerConnection.java
+index 58815893..ceb113db 100644
+--- a/src/main/java/net/minecraft/server/PlayerConnection.java
++++ b/src/main/java/net/minecraft/server/PlayerConnection.java
+@@ -1452,15 +1452,21 @@ public class PlayerConnection implements PacketListenerPlayIn, IUpdatePlayerList
+         PlayerConnectionUtils.ensureMainThread(packetplayinuseentity, this, this.player.u());
+         WorldServer worldserver = this.minecraftServer.getWorldServer(this.player.dimension);
+         Entity entity = packetplayinuseentity.a((World) worldserver);
+-        System.out.println("[hd] >>>" + this.player.getName() + "/" + (entity == null ? "null" : entity.getName()) + " packet received!");
++        if (PaperSpigotConfig.logHits) {
++            System.out.println("[hd] >>>" + this.player.getName() + "/" + (entity == null ? "null" : entity.getName()) + " packet received!");
++        }
+         if (this.player.dead) {
+-            System.out.println("[hd] " + this.player.getName() + "/" + (entity == null ? "null" : entity.getName()) + " cancelled! PC dead player.");
++            if (PaperSpigotConfig.logHits) {
++                System.out.println("[hd] " + this.player.getName() + "/" + (entity == null ? "null" : entity.getName()) + " cancelled! PC dead player.");
++            }
+             return; // CraftBukkit
+         }
+         // Spigot Start
+         if ( entity == player && !player.isSpectator() )
+         {
+-            System.out.println("[hd] " + this.player.getName() + "/" + (entity == null ? "null" : entity.getName()) + " cancelled! PC hitting self.");
++            if (PaperSpigotConfig.logHits) {
++                System.out.println("[hd] " + this.player.getName() + "/" + (entity == null ? "null" : entity.getName()) + " cancelled! PC hitting self.");
++            }
+             disconnect( "Cannot interact with self!" );
+             return;
+         }
+@@ -1535,7 +1541,9 @@ public class PlayerConnection implements PacketListenerPlayIn, IUpdatePlayerList
+                     PlayerAttackEntityEvent event = new PlayerAttackEntityEvent(this.getPlayer(), entity.getBukkitEntity());
+                     this.server.getPluginManager().callEvent(event);
+                     if(event.isCancelled()) {
+-                        System.out.println("[hd] " + this.player.getName() + "/" + (entity == null ? "null" : entity.getName()) + " cancelled! PC plugin cancelled.");
++                        if (PaperSpigotConfig.logHits) {
++                            System.out.println("[hd] " + this.player.getName() + "/" + (entity == null ? "null" : entity.getName()) + " cancelled! PC plugin cancelled.");
++                        }
+                         return;
+                     }
+                     // CraftBukkit end
+@@ -1549,12 +1557,16 @@ public class PlayerConnection implements PacketListenerPlayIn, IUpdatePlayerList
+                     // CraftBukkit end
+                 }
+             } else {
+-                System.out.println("[hd] " + this.player.getName() + "/" + (entity == null ? "null" : entity.getName()) + " cancelled! PC too far.");
++                if (PaperSpigotConfig.logHits) {
++                    System.out.println("[hd] " + this.player.getName() + "/" + (entity == null ? "null" : entity.getName()) + " cancelled! PC too far.");
++                }
+             }
+         }
+         // Paper start - fire event
+         else {
+-            System.out.println("[hd] " + this.player.getName() + "/" + (entity == null ? "null" : entity.getName()) + " cancelled! PC nothing?");
++            if (PaperSpigotConfig.logHits) {
++                System.out.println("[hd] " + this.player.getName() + "/" + (entity == null ? "null" : entity.getName()) + " cancelled! PC nothing?");
++            }
+             new org.github.paperspigot.event.player.PlayerUseUnknownEntityEvent(this.getPlayer(), packetplayinuseentity.getEntityId(), packetplayinuseentity.a() == PacketPlayInUseEntity.EnumEntityUseAction.ATTACK).callEvent();
+         }
+         // Paper end
+diff --git a/src/main/java/org/github/paperspigot/PaperSpigotConfig.java b/src/main/java/org/github/paperspigot/PaperSpigotConfig.java
+index e6b198af..89f3f150 100644
+--- a/src/main/java/org/github/paperspigot/PaperSpigotConfig.java
++++ b/src/main/java/org/github/paperspigot/PaperSpigotConfig.java
+@@ -168,6 +168,11 @@ public class PaperSpigotConfig
+         printDamage = getBoolean("settings.print-damage", printDamage);
+     }
+ 
++    public static boolean logHits = false;
++    private static void logHits() {
++        logHits = getBoolean("settings.log-hits", logHits);
++    }
++
+     public static boolean printArrowVelocity = false;
+     private static void printArrowVelocity() {
+         printArrowVelocity = getBoolean("settings.print-arrow-velocity", printArrowVelocity);
+-- 
+2.29.2
+
