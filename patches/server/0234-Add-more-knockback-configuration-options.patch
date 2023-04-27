@@ -1,0 +1,222 @@
+From 5ede191508d9b9ff58ccdcd619c50a1f27f60b8c Mon Sep 17 00:00:00 2001
+From: halfmaster1 <ohpointfive@gmail.com>
+Date: Sat, 18 Feb 2023 15:24:08 -0500
+Subject: [PATCH] Add more knockback configuration options
+
+
+diff --git a/src/main/java/app/ashcon/sportpaper/server/KnockbackModificationCommand.java b/src/main/java/app/ashcon/sportpaper/server/KnockbackModificationCommand.java
+index a7445a7e..1c6e4a75 100644
+--- a/src/main/java/app/ashcon/sportpaper/server/KnockbackModificationCommand.java
++++ b/src/main/java/app/ashcon/sportpaper/server/KnockbackModificationCommand.java
+@@ -16,23 +16,26 @@ public class KnockbackModificationCommand extends Command {
+ 
+     // Default values
+     private final double knockbackFrictionHorizontal, knockbackFrictionVertical, knockbackHorizontal, knockbackVertical,
+-            knockbackVerticalLimit, knockbackExtraHorizontal, knockbackExtraVertical;
++            knockbackVerticalLimit, knockbackVerticalDeltaLimit, knockbackExtraHorizontal, knockbackExtraVertical;
++    private final boolean yawReduction;
+ 
+     public KnockbackModificationCommand(String name, double knockbackFrictionHorizontal, double knockbackFrictionVertical, double knockbackHorizontal,
+-                                        double knockbackVertical, double knockbackVerticalLimit,
+-                                        double knockbackExtraHorizontal, double knockbackExtraVertical) {
++                                        double knockbackVertical, double knockbackVerticalLimit, double knockbackVerticalDeltaLimit,
++                                        double knockbackExtraHorizontal, double knockbackExtraVertical, boolean yawReduction) {
+         super(name);
+         this.description = "Modify the knockback configuration";
+         this.usageMessage = "/knockback " +
+-                "<horizontal-friction|vertical-friction|horizontal|vertical|vertical-limit|extra-horizontal|extra-vertical|reset|show> <value>";
++                "<horizontal-friction|vertical-friction|horizontal|vertical|vertical-limit|vertical-delta-limit|extra-horizontal|extra-vertical|yaw-reduction|reset|show> <value>";
+         this.setPermission("bukkit.command.knockback");
+         this.knockbackFrictionHorizontal = knockbackFrictionHorizontal;
+         this.knockbackFrictionVertical = knockbackFrictionVertical;
+         this.knockbackHorizontal = knockbackHorizontal;
+         this.knockbackVertical = knockbackVertical;
+         this.knockbackVerticalLimit = knockbackVerticalLimit;
++        this.knockbackVerticalDeltaLimit = knockbackVerticalDeltaLimit;
+         this.knockbackExtraHorizontal = knockbackExtraHorizontal;
+         this.knockbackExtraVertical = knockbackExtraVertical;
++        this.yawReduction = yawReduction;
+     }
+ 
+     @Override
+@@ -83,6 +86,13 @@ public class KnockbackModificationCommand extends Command {
+                     updated(sender, "vertical limit", oldVal, newVal);
+                     break;
+                 }
++                case "vertical-delta-limit": {
++                    double oldVal = PaperSpigotConfig.knockbackVerticalDeltaLimit;
++                    double newVal = parseValue(args);
++                    PaperSpigotConfig.knockbackVerticalDeltaLimit = newVal;
++                    updated(sender, "vertical delta limit", oldVal, newVal);
++                    break;
++                }
+                 case "extra-horizontal": {
+                     double oldVal = PaperSpigotConfig.knockbackExtraHorizontal;
+                     double newVal = parseValue(args);
+@@ -97,12 +107,20 @@ public class KnockbackModificationCommand extends Command {
+                     updated(sender, "vertical (extra)", oldVal, newVal);
+                     break;
+                 }
++                case "yaw-reduction": {
++                    boolean oldVal = PaperSpigotConfig.knockbackYawReduction;
++                    boolean newVal = parseBooleanValue(args);
++                    PaperSpigotConfig.knockbackYawReduction = newVal;
++                    updated(sender, "yaw reduction", oldVal, newVal);
++                    break;
++                }
+                 case "reset":
+                     PaperSpigotConfig.knockbackFrictionHorizontal = knockbackFrictionHorizontal;
+                     PaperSpigotConfig.knockbackFrictionVertical = knockbackFrictionVertical;
+                     PaperSpigotConfig.knockbackHorizontal = knockbackHorizontal;
+                     PaperSpigotConfig.knockbackVertical = knockbackVertical;
+                     PaperSpigotConfig.knockbackVerticalLimit = knockbackVerticalLimit;
++                    PaperSpigotConfig.knockbackVerticalDeltaLimit = knockbackVerticalDeltaLimit;
+                     PaperSpigotConfig.knockbackExtraHorizontal = knockbackExtraHorizontal;
+                     PaperSpigotConfig.knockbackExtraVertical = knockbackExtraVertical;
+                     sender.sendMessage(ChatColor.GREEN + "Knockback config reset to values from file.");
+@@ -114,8 +132,10 @@ public class KnockbackModificationCommand extends Command {
+                     sendValue(sender, "Horizontal Knockback", PaperSpigotConfig.knockbackHorizontal);
+                     sendValue(sender, "Vertical Knockback", PaperSpigotConfig.knockbackVertical);
+                     sendValue(sender, "Vertical Limit", PaperSpigotConfig.knockbackVerticalLimit);
++                    sendValue(sender, "Vertical Delta Limit", PaperSpigotConfig.knockbackVerticalDeltaLimit);
+                     sendValue(sender, "Horizontal (Extra)", PaperSpigotConfig.knockbackExtraHorizontal);
+                     sendValue(sender, "Vertical (Extra)", PaperSpigotConfig.knockbackExtraVertical);
++                    sendValue(sender, "Yaw Reduction", PaperSpigotConfig.knockbackYawReduction);
+                     break;
+                 default:
+                     sender.sendMessage(ChatColor.RED + "Usage: " + usageMessage);
+@@ -146,13 +166,36 @@ public class KnockbackModificationCommand extends Command {
+         }
+     }
+ 
++    private boolean parseBooleanValue(String[] args) {
++        if (args.length != 2)
++            throw new RuntimeException("Please specify a single value to set the option to.");
++
++        if (args[1].toLowerCase().equals("true")) {
++            return true;
++        } else if (args[1].toLowerCase().equals("false")) {
++            return false;
++        } else {
++            throw new RuntimeException("Invalid value specified!");
++        }
++    }
++
+     private void updated(CommandSender viewer, String name, double oldVal, double newVal) {
+         viewer.sendMessage(ChatColor.GREEN + "Updated " + ChatColor.GOLD + name + ChatColor.GREEN + " from " +
+                 ChatColor.BLUE + oldVal + ChatColor.GREEN + " to " + ChatColor.BLUE + newVal);
+     }
+ 
++    private void updated(CommandSender viewer, String name, boolean oldVal, boolean newVal) {
++        viewer.sendMessage(ChatColor.GREEN + "Updated " + ChatColor.GOLD + name + ChatColor.GREEN + " from " +
++                ChatColor.BLUE + oldVal + ChatColor.GREEN + " to " + ChatColor.BLUE + newVal);
++    }
++
+     private void sendValue(CommandSender viewer, String name, double value) {
+         viewer.sendMessage(ChatColor.AQUA + ChatColor.BOLD.toString() + name + ChatColor.RESET +
+                 ": " + ChatColor.BLUE + value);
+     }
++
++    private void sendValue(CommandSender viewer, String name, boolean value) {
++        viewer.sendMessage(ChatColor.AQUA + ChatColor.BOLD.toString() + name + ChatColor.RESET +
++                ": " + ChatColor.BLUE + value);
++    }
+ }
+diff --git a/src/main/java/net/minecraft/server/EntityLiving.java b/src/main/java/net/minecraft/server/EntityLiving.java
+index 8ca92189..9f4cb2bf 100644
+--- a/src/main/java/net/minecraft/server/EntityLiving.java
++++ b/src/main/java/net/minecraft/server/EntityLiving.java
+@@ -862,7 +862,7 @@ public abstract class EntityLiving extends Entity {
+                         }
+ 
+                         this.aw = (float) (MathHelper.b(d1, d0) * 180.0D / 3.1415927410125732D - (double) this.yaw);
+-                        damagesource.knockbackEventCalled = this.a(entity, f, d0, d1); // SportPaper
++                        damagesource.knockbackEventCalled = this.a(entity, f, d0, d1, damagesource); // SportPaper
+                     } else {
+                         this.aw = (float) ((int) (Math.random() * 2.0D) * 180);
+                     }
+@@ -961,7 +961,7 @@ public abstract class EntityLiving extends Entity {
+ 
+     protected void dropEquipment(boolean flag, int i) {}
+ 
+-    public boolean a(Entity entity, float f, double d0, double d1) { // SportPaper - void -> boolean
++    public boolean a(Entity entity, float f, double d0, double d1, DamageSource damageSource) { // SportPaper - void -> boolean
+         if (this.random.nextDouble() >= this.getAttributeInstance(GenericAttributes.c).getValue()) {
+             this.ai = true;
+ 
+@@ -980,9 +980,27 @@ public abstract class EntityLiving extends Entity {
+             double oldMotY = this.motY;
+             double oldMotZ = this.motZ;
+ 
+-            this.motX /= frictionHorizontal;
+-            this.motY /= frictionVertical;
+-            this.motZ /= frictionHorizontal;
++            if (frictionVertical >= 0.0) {
++                this.motY /= frictionVertical;
++            } else {
++                this.motY = 0.0F;
++            }
++
++            if (frictionHorizontal >= 0.0) {
++                this.motX /= frictionHorizontal;
++                this.motZ /= frictionHorizontal;
++            } else {
++                this.motX = 0.0F;
++                this.motZ = 0.0F;
++            }
++
++            if (PaperSpigotConfig.knockbackYawReduction && !(damageSource instanceof EntityDamageSourceIndirect)) {
++                double hitYaw = org.bukkit.craftbukkit.TrigMath.atan2(d1, d0) * 180.0F / 3.1415927F + 90.0F;
++                double lookYaw = entity.yaw;
++                double difference = hitYaw - lookYaw;
++                double factor = Math.abs(Math.cos(Math.toRadians(difference) / 2.0));
++                horizontalKnockback *= factor;
++            }
+ 
+             this.motX -= d0 / magnitude * horizontalKnockback;
+             this.motY += verticalKnockback;
+@@ -991,6 +1009,11 @@ public abstract class EntityLiving extends Entity {
+             if (this.motY > PaperSpigotConfig.knockbackVerticalLimit) {
+                 this.motY = PaperSpigotConfig.knockbackVerticalLimit;
+             }
++
++            if (PaperSpigotConfig.knockbackVerticalDeltaLimit > 0.0 && this.motY > oldMotY + PaperSpigotConfig.knockbackVerticalDeltaLimit) {
++                this.motY = oldMotY + PaperSpigotConfig.knockbackVerticalDeltaLimit;
++            }
++
+             // SportPaper end
+ 
+             // Paper start - call EntityKnockbackByEntityEvent
+diff --git a/src/main/java/org/github/paperspigot/PaperSpigotConfig.java b/src/main/java/org/github/paperspigot/PaperSpigotConfig.java
+index 127994c4..acf32e1e 100644
+--- a/src/main/java/org/github/paperspigot/PaperSpigotConfig.java
++++ b/src/main/java/org/github/paperspigot/PaperSpigotConfig.java
+@@ -302,19 +302,23 @@ public class PaperSpigotConfig
+     public static double knockbackHorizontal;
+     public static double knockbackVertical;
+     public static double knockbackVerticalLimit;
++    public static double knockbackVerticalDeltaLimit;
+     public static double knockbackExtraHorizontal;
+     public static double knockbackExtraVertical;
++    public static boolean knockbackYawReduction;
+     private static void knockback() {
+         knockbackFrictionHorizontal = getDouble( "knockback.horizontal-friction", 2.0D );
+         knockbackFrictionVertical = getDouble( "knockback.vertical-friction", 2.0D );
+         knockbackHorizontal = getDouble( "knockback.horizontal", 0.4D );
+         knockbackVertical = getDouble( "knockback.vertical", 0.4D );
+         knockbackVerticalLimit = getDouble( "knockback.vertical-limit", 0.4D );
++        knockbackVerticalDeltaLimit = getDouble( "knockback.vertical-delta-limit", -1.0D );
+         knockbackExtraHorizontal = getDouble( "knockback.extra-horizontal", 0.5D );
+         knockbackExtraVertical = getDouble( "knockback.extra-vertical", 0.1D );
++        knockbackYawReduction = getBoolean( "knockback.yaw-reduction", false );
+         commands.put("knockback", new KnockbackModificationCommand( "knockback", knockbackFrictionHorizontal,
+-                knockbackFrictionVertical, knockbackHorizontal, knockbackVertical, knockbackVerticalLimit,
+-                knockbackExtraHorizontal, knockbackExtraVertical));
++                knockbackFrictionVertical, knockbackHorizontal, knockbackVertical, knockbackVerticalLimit, knockbackVerticalDeltaLimit,
++                knockbackExtraHorizontal, knockbackExtraVertical, knockbackYawReduction));
+     }
+ 
+ }
+-- 
+2.29.2
+
