@@ -1,0 +1,21 @@
+From 60c5f40da94a5079a7df4f95f1e800ec7b6bf1b9 Mon Sep 17 00:00:00 2001
+From: halfmaster1 <ohpointfive@gmail.com>
+Date: Sun, 21 May 2023 23:26:51 -0400
+Subject: [PATCH] Add stack traces to error kicks
+
+
+diff --git a/src/main/java/net/minecraft/server/NetworkManager.java b/src/main/java/net/minecraft/server/NetworkManager.java
+index 9e35715a..cceeef31 100644
+--- a/src/main/java/net/minecraft/server/NetworkManager.java
++++ b/src/main/java/net/minecraft/server/NetworkManager.java
+@@ -112,6 +112,7 @@ public class NetworkManager extends SimpleChannelInboundHandler<Packet> {
+         if (throwable instanceof TimeoutException) {
+             chatmessage = new ChatMessage("disconnect.timeout", new Object[0]);
+         } else {
++            throwable.printStackTrace(); // Sportpaper
+             chatmessage = new ChatMessage("disconnect.genericReason", new Object[] { "Internal Exception: " + throwable});
+         }
+ 
+-- 
+2.29.2
+

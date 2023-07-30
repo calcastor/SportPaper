@@ -1,0 +1,272 @@
+From d43a5aee17954e03741e4f6ee60845758bd4ddfe Mon Sep 17 00:00:00 2001
+From: halfmaster1 <ohpointfive@gmail.com>
+Date: Sun, 21 May 2023 23:26:57 -0400
+Subject: [PATCH] Improve bucket behaviour
+
+
+diff --git a/src/main/java/net/minecraft/server/BucketPlaceOverride.java b/src/main/java/net/minecraft/server/BucketPlaceOverride.java
+new file mode 100644
+index 00000000..6150d3cc
+--- /dev/null
++++ b/src/main/java/net/minecraft/server/BucketPlaceOverride.java
+@@ -0,0 +1,11 @@
++package net.minecraft.server;
++
++public class BucketPlaceOverride {
++    public final BlockPosition blockPosition;
++    public final EnumDirection blockFace;
++
++    public BucketPlaceOverride(BlockPosition blockPosition, EnumDirection blockFace) {
++        this.blockPosition = blockPosition;
++        this.blockFace = blockFace;
++    }
++}
+diff --git a/src/main/java/net/minecraft/server/EntityPlayer.java b/src/main/java/net/minecraft/server/EntityPlayer.java
+index 4a8962db..0ec16a7c 100644
+--- a/src/main/java/net/minecraft/server/EntityPlayer.java
++++ b/src/main/java/net/minecraft/server/EntityPlayer.java
+@@ -197,6 +197,8 @@ public class EntityPlayer extends EntityHuman implements ICrafting {
+     }
+ 
+     public void t_() {
++        this.playerConnection.t_();
++
+         // CraftBukkit start
+         if (this.joining) {
+             this.joining = false;
+diff --git a/src/main/java/net/minecraft/server/ItemBucket.java b/src/main/java/net/minecraft/server/ItemBucket.java
+index 2e24129f..67cd663c 100644
+--- a/src/main/java/net/minecraft/server/ItemBucket.java
++++ b/src/main/java/net/minecraft/server/ItemBucket.java
+@@ -1,5 +1,6 @@
+ package net.minecraft.server;
+ 
++import org.bukkit.Bukkit;
+ // CraftBukkit start
+ import org.bukkit.craftbukkit.event.CraftEventFactory;
+ import org.bukkit.craftbukkit.inventory.CraftItemStack;
+@@ -20,14 +21,30 @@ public class ItemBucket extends Item {
+     }
+ 
+     public ItemStack a(ItemStack itemstack, World world, EntityHuman entityhuman) {
++        return a(itemstack, world, entityhuman, null);
++    }
++
++    public ItemStack a(ItemStack itemstack, World world, EntityHuman entityhuman, BucketPlaceOverride optionalBucketPlaceOverride) {
+         boolean flag = this.a == Blocks.AIR;
+         MovingObjectPosition movingobjectposition = this.a(world, entityhuman, flag);
+ 
+-        if (movingobjectposition == null) {
++        BucketPlaceOverride bucketOverride = flag ? null : optionalBucketPlaceOverride;
++
++        if (movingobjectposition == null && (bucketOverride == null || flag)) {
+             return itemstack;
+         } else {
+-            if (movingobjectposition.type == MovingObjectPosition.EnumMovingObjectType.BLOCK) {
+-                BlockPosition blockposition = movingobjectposition.a();
++            if (bucketOverride != null || movingobjectposition.type == MovingObjectPosition.EnumMovingObjectType.BLOCK) {
++
++                EnumDirection direction;
++                BlockPosition blockposition;
++
++                if (bucketOverride == null) {
++                    direction = movingobjectposition.direction;
++                    blockposition = movingobjectposition.a();
++                } else {
++                    blockposition = bucketOverride.blockPosition;
++                    direction = bucketOverride.blockFace;
++                }
+ 
+                 if (!world.a(entityhuman, blockposition)) {
+                     return itemstack;
+@@ -82,16 +99,16 @@ public class ItemBucket extends Item {
+                         // CraftBukkit end
+                     }
+ 
+-                    BlockPosition blockposition1 = blockposition.shift(movingobjectposition.direction);
++                    BlockPosition blockposition1 = blockposition.shift(direction);
+ 
+-                    if (!entityhuman.a(blockposition1, movingobjectposition.direction, itemstack)) {
++                    if (!entityhuman.a(blockposition1, direction, itemstack)) {
+                         return itemstack;
+                     }
+ 
+                     // CraftBukkit start
+                     // Check that the bucket can be emptied before firing the event
+                     if (world.isEmpty(blockposition1) || !world.getType(blockposition1).getBlock().getMaterial().isBuildable()) {
+-                        PlayerBucketEmptyEvent event = CraftEventFactory.callPlayerBucketEmptyEvent(entityhuman, blockposition.getX(), blockposition.getY(), blockposition.getZ(), movingobjectposition.direction, itemstack);
++                        PlayerBucketEmptyEvent event = CraftEventFactory.callPlayerBucketEmptyEvent(entityhuman, blockposition.getX(), blockposition.getY(), blockposition.getZ(), direction, itemstack);
+                         if (event.isCancelled()) {
+                             ((EntityPlayer)entityhuman).updateInventory(entityhuman.defaultContainer);
+                             return itemstack;
+diff --git a/src/main/java/net/minecraft/server/ItemStack.java b/src/main/java/net/minecraft/server/ItemStack.java
+index c54050bf..090d5dbe 100644
+--- a/src/main/java/net/minecraft/server/ItemStack.java
++++ b/src/main/java/net/minecraft/server/ItemStack.java
+@@ -239,8 +239,13 @@ public final class ItemStack {
+         return this.getItem().getDestroySpeed(this, block);
+     }
+ 
+-    public ItemStack a(World world, EntityHuman entityhuman) {
+-        return this.getItem().a(this, world, entityhuman);
++    public ItemStack a(World world, EntityHuman entityhuman, BucketPlaceOverride optionalBucketPlaceOverride) {
++        Item item = this.getItem();
++        if (optionalBucketPlaceOverride != null && item instanceof ItemBucket) {
++            return ((ItemBucket) item).a(this, world, entityhuman, optionalBucketPlaceOverride);
++        } else {
++            return item.a(this, world, entityhuman);
++        }
+     }
+ 
+     public ItemStack b(World world, EntityHuman entityhuman) {
+diff --git a/src/main/java/net/minecraft/server/PlayerConnection.java b/src/main/java/net/minecraft/server/PlayerConnection.java
+index ceb113db..426e74c6 100644
+--- a/src/main/java/net/minecraft/server/PlayerConnection.java
++++ b/src/main/java/net/minecraft/server/PlayerConnection.java
+@@ -13,7 +13,9 @@ import java.util.Arrays;
+ import java.util.Collections;
+ import java.util.Date;
+ import java.util.Iterator;
++import java.util.LinkedList;
+ import java.util.List;
++import java.util.Queue;
+ import java.util.Set;
+ import java.util.concurrent.Callable;
+ import org.apache.commons.lang3.StringUtils;
+@@ -32,6 +34,7 @@ import org.bukkit.craftbukkit.inventory.CraftItemStack;
+ import org.bukkit.craftbukkit.util.CraftChatMessage;
+ import org.bukkit.craftbukkit.util.LazyPlayerSet;
+ import org.bukkit.craftbukkit.util.Waitable;
++import org.bukkit.Bukkit;
+ import org.bukkit.Location;
+ import org.bukkit.entity.Player;
+ import org.bukkit.event.Event;
+@@ -127,6 +130,8 @@ public class PlayerConnection implements PacketListenerPlayIn, IUpdatePlayerList
+     private final static HashSet<Integer> invalidItems = new HashSet<Integer>(java.util.Arrays.asList(8, 9, 10, 11, 26, 34, 36, 43, 51, 52, 55, 59, 60, 62, 63, 64, 68, 71, 74, 75, 83, 90, 92, 93, 94, 104, 105, 115, 117, 118, 119, 125, 127, 132, 140, 141, 142, 144)); // TODO: Check after every update.
+     // CraftBukkit end
+ 
++    private List<PacketPlayInBlockPlace> delayedPackets = new ArrayList<PacketPlayInBlockPlace>(); // Sportpaper
++
+     public void c() {
+         this.h = false;
+         ++this.e;
+@@ -684,7 +689,7 @@ public class PlayerConnection implements PacketListenerPlayIn, IUpdatePlayerList
+     private long lastPlace = -1;
+     private int packets = 0;
+ 
+-    public void a(PacketPlayInBlockPlace packetplayinblockplace) {
++    private void handlePacketPlayInBlockPlaceImmediately(PacketPlayInBlockPlace packetplayinblockplace, BucketPlaceOverride optionalBucketPlaceOverride) {
+         PlayerConnectionUtils.ensureMainThread(packetplayinblockplace, this, this.player.u());
+         WorldServer worldserver = this.minecraftServer.getWorldServer(this.player.dimension);
+         boolean throttled = false;
+@@ -741,7 +746,7 @@ public class PlayerConnection implements PacketListenerPlayIn, IUpdatePlayerList
+             MovingObjectPosition movingobjectposition = this.player.world.rayTrace(vec3d, vec3d1, false);
+ 
+             boolean cancelled = false;
+-            if (movingobjectposition == null || movingobjectposition.type != MovingObjectPosition.EnumMovingObjectType.BLOCK) {
++            if ((optionalBucketPlaceOverride == null || itemstack.getItem() == Items.BUCKET) && (movingobjectposition == null || movingobjectposition.type != MovingObjectPosition.EnumMovingObjectType.BLOCK)) {
+                 org.bukkit.event.player.PlayerInteractEvent event = CraftEventFactory.callPlayerInteractEvent(this.player, Action.RIGHT_CLICK_AIR, itemstack);
+                 cancelled = event.useItemInHand() == Event.Result.DENY;
+             } else {
+@@ -749,8 +754,19 @@ public class PlayerConnection implements PacketListenerPlayIn, IUpdatePlayerList
+                     player.playerInteractManager.firedInteract = false;
+                     cancelled = player.playerInteractManager.interactResult;
+                 } else {
+-                    org.bukkit.event.player.PlayerInteractEvent event = CraftEventFactory.callPlayerInteractEvent(player, Action.RIGHT_CLICK_BLOCK, movingobjectposition.a(), movingobjectposition.direction, itemstack, true);
+-                    cancelled = event.useItemInHand() == Event.Result.DENY;
++                    BlockPosition blockPosition = null;
++                    EnumDirection direction = null;
++                    if (optionalBucketPlaceOverride != null && (itemstack.getItem() == Items.WATER_BUCKET || itemstack.getItem() == Items.LAVA_BUCKET)) {
++                        blockPosition = optionalBucketPlaceOverride.blockPosition;
++                        direction = optionalBucketPlaceOverride.blockFace;
++                    } else if (movingobjectposition != null) {
++                        blockPosition = movingobjectposition.a();
++                        direction = movingobjectposition.direction;
++                    }
++                    if (blockPosition != null && direction != null) {
++                        org.bukkit.event.player.PlayerInteractEvent event = CraftEventFactory.callPlayerInteractEvent(player, Action.RIGHT_CLICK_BLOCK, blockPosition, direction, itemstack, true);
++                        cancelled = event.useItemInHand() == Event.Result.DENY;
++                    }
+                 }
+             }
+ 
+@@ -772,7 +788,10 @@ public class PlayerConnection implements PacketListenerPlayIn, IUpdatePlayerList
+                 }
+                 // SportPaper end
+             } else {
+-                this.player.playerInteractManager.useItem(this.player, this.player.world, itemstack);
++                this.player.playerInteractManager.useItem(this.player, this.player.world, itemstack, optionalBucketPlaceOverride);
++                if (optionalBucketPlaceOverride == null || itemstack.getItem() == Items.BUCKET) {
++                    flag = true;
++                }
+             }
+             }
+             // Spigot end
+@@ -833,6 +852,37 @@ public class PlayerConnection implements PacketListenerPlayIn, IUpdatePlayerList
+ 
+     }
+ 
++    public void t_() {
++        Queue<BucketPlaceOverride> regularClickBlockPositions = new LinkedList<>();
++        List<PacketPlayInBlockPlace> clone = new ArrayList<>(delayedPackets);
++        delayedPackets.clear();
++        for (PacketPlayInBlockPlace delayedPacket : clone) {
++            if (delayedPacket.getFace() != 255) {
++                regularClickBlockPositions.add(new BucketPlaceOverride(delayedPacket.a(), EnumDirection.fromType1(delayedPacket.getFace())));
++            }
++        }
++        for (PacketPlayInBlockPlace delayedPacket : clone) {
++            if (delayedPacket.getFace() == 255) {
++                BucketPlaceOverride optionalBucketPlaceOverride = regularClickBlockPositions.poll();
++                handlePacketPlayInBlockPlaceImmediately(delayedPacket, optionalBucketPlaceOverride);
++            }
++        }
++        for (PacketPlayInBlockPlace delayedPacket : clone) {
++            if (delayedPacket.getFace() != 255) {
++                handlePacketPlayInBlockPlaceImmediately(delayedPacket, null);
++            }
++        }
++    }
++
++    public void a(PacketPlayInBlockPlace packetplayinblockplace) {
++        ItemStack itemStack = packetplayinblockplace.getItemStack();
++        if (itemStack != null && (itemStack.getItem() == Items.WATER_BUCKET || itemStack.getItem() == Items.LAVA_BUCKET || itemStack.getItem() == Items.BUCKET)) {
++            delayedPackets.add(packetplayinblockplace);
++        } else {
++            handlePacketPlayInBlockPlaceImmediately(packetplayinblockplace, null);
++        }
++    }
++
+     public void a(PacketPlayInSpectate packetplayinspectate) {
+         PlayerConnectionUtils.ensureMainThread(packetplayinspectate, this, this.player.u());
+         if (this.player.isSpectator()) {
+diff --git a/src/main/java/net/minecraft/server/PlayerInteractManager.java b/src/main/java/net/minecraft/server/PlayerInteractManager.java
+index a04a0891..4b1d3632 100644
+--- a/src/main/java/net/minecraft/server/PlayerInteractManager.java
++++ b/src/main/java/net/minecraft/server/PlayerInteractManager.java
+@@ -367,15 +367,20 @@ public class PlayerInteractManager {
+         }
+     }
+ 
+-    public boolean useItem(EntityHuman entityhuman, World world, ItemStack itemstack) {
++    public boolean useItem(EntityHuman entityhuman, World world, ItemStack itemstack, BucketPlaceOverride optionalBucketPlaceOverride) {
+         if (this.gamemode == WorldSettings.EnumGamemode.SPECTATOR) {
+             return false;
+         } else {
+             int i = itemstack.count;
+             int j = itemstack.getData();
+-            ItemStack itemstack1 = itemstack.a(world, entityhuman);
++            ItemStack itemstack1 = itemstack.a(world, entityhuman, optionalBucketPlaceOverride);
+ 
+             if (itemstack1 == itemstack && (itemstack1 == null || itemstack1.count == i && itemstack1.l() <= 0 && itemstack1.getData() == j)) {
++                if (itemstack.getItem() == Items.BUCKET || itemstack.getItem() == Items.WATER_BUCKET || itemstack.getItem() == Items.LAVA_BUCKET) {
++                    if (!entityhuman.bS()) {
++                        ((EntityPlayer) entityhuman).updateInventory(entityhuman.defaultContainer);
++                    }
++                }
+                 return false;
+             } else {
+                 entityhuman.inventory.items[entityhuman.inventory.itemInHandIndex] = itemstack1;
+-- 
+2.29.2
+

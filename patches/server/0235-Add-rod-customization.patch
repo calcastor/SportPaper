@@ -1,4 +1,4 @@
-From 771776bfde643ee24ab572b03887f661eb4bdb28 Mon Sep 17 00:00:00 2001
+From c129584cc93572bbd2ee33d356d4423f9f9f4acc Mon Sep 17 00:00:00 2001
 From: halfmaster1 <ohpointfive@gmail.com>
 Date: Mon, 10 Apr 2023 22:56:22 -0400
 Subject: [PATCH] Add rod customization
@@ -63,7 +63,7 @@ index 38025152..971aac05 100644
                  double d1 = this.owner.locY - this.locY;
                  double d2 = this.owner.locZ - this.locZ;
 diff --git a/src/main/java/org/github/paperspigot/PaperSpigotConfig.java b/src/main/java/org/github/paperspigot/PaperSpigotConfig.java
-index acf32e1e..b6bb6886 100644
+index acf32e1e..b168f510 100644
 --- a/src/main/java/org/github/paperspigot/PaperSpigotConfig.java
 +++ b/src/main/java/org/github/paperspigot/PaperSpigotConfig.java
 @@ -213,6 +213,26 @@ public class PaperSpigotConfig
@@ -85,7 +85,7 @@ index acf32e1e..b6bb6886 100644
 +        bobberFrictionMultiplier = getDouble("settings.bobber-friction-multiplier", bobberFrictionMultiplier);
 +    }
 +
-+    public static boolean includeRandomnessInBobberTrajectory = false;
++    public static boolean includeRandomnessInBobberTrajectory = true;
 +    private static void includeRandomnessInBobberTrajectory() {
 +        includeRandomnessInBobberTrajectory = getBoolean("settings.include-randomness-in-bobber-trajectory", includeRandomnessInBobberTrajectory);
 +    }
