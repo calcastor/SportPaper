@@ -1,0 +1,63 @@
+From c6b37a60d23f2cc9c07a667c83c219de2db3eba0 Mon Sep 17 00:00:00 2001
+From: halfmaster1 <ohpointfive@gmail.com>
+Date: Tue, 1 Aug 2023 15:29:03 -0400
+Subject: [PATCH] Add different blocking config options
+
+For some reason there is an old blocking config option that doesn't work.
+I didn't touch that one.
+
+diff --git a/src/main/java/net/minecraft/server/EntityLiving.java b/src/main/java/net/minecraft/server/EntityLiving.java
+index 9f4cb2bf..6d817aca 100644
+--- a/src/main/java/net/minecraft/server/EntityLiving.java
++++ b/src/main/java/net/minecraft/server/EntityLiving.java
+@@ -1180,7 +1180,15 @@ public abstract class EntityLiving extends Entity {
+                 public Double apply(Double f) {
+                     if (human) {
+                         if (!damagesource.ignoresArmor() && ((EntityHuman) EntityLiving.this).isBlocking() && f > 0.0F) {
+-                            return -(f - ((1.0F + f) * 0.5F));
++                            if (damagesource.a()) { // It's from a projectile
++                                return -(f - ((1.0F + f) * PaperSpigotConfig.blockingProjectileMultiplier));
++                            } else if (damagesource.isExplosion()) { // It's from an explosion - I checked and this is what it claims to be even though the .setExplosion on DamageSource is for fire
++                                return -(f - ((1.0F + f) * PaperSpigotConfig.blockingExplosionMultiplier));
++                            } else if (damagesource.o()) { // It's from fire or lava, even though it's set by .setExplosion
++                                return -(f - ((1.0F + f) * PaperSpigotConfig.blockingFireMultiplier));
++                            } else { // It's probably melee, but could be something like a cactus or an anvil
++                                return -(f - ((1.0F + f) * PaperSpigotConfig.blockingMultiplier));
++                            }
+                         }
+                     }
+                     return -0.0;
+diff --git a/src/main/java/org/github/paperspigot/PaperSpigotConfig.java b/src/main/java/org/github/paperspigot/PaperSpigotConfig.java
+index 9c42242f..6e55ca76 100644
+--- a/src/main/java/org/github/paperspigot/PaperSpigotConfig.java
++++ b/src/main/java/org/github/paperspigot/PaperSpigotConfig.java
+@@ -238,6 +238,26 @@ public class PaperSpigotConfig
+         intuitiveCobblestoneGeneration = getBoolean("settings.intuitive-cobblestone-generation", intuitiveCobblestoneGeneration);
+     }
+ 
++    public static double blockingMultiplier = 0.5D;
++    private static void blockingMultiplier() {
++        blockingMultiplier = getDouble("settings.blocking-multiplier", blockingMultiplier);
++    }
++
++    public static double blockingProjectileMultiplier = 0.5D;
++    private static void blockingProjectileMultiplier() {
++        blockingProjectileMultiplier = getDouble("settings.blocking-projectile-multiplier", blockingProjectileMultiplier);
++    }
++
++    public static double blockingExplosionMultiplier = 0.5D;
++    private static void blockingExplosionMultiplier() {
++        blockingExplosionMultiplier = getDouble("settings.blocking-explosion-multiplier", blockingExplosionMultiplier);
++    }
++
++    public static double blockingFireMultiplier = 0.5D;
++    private static void blockingFireMultiplier() {
++        blockingFireMultiplier = getDouble("settings.blocking-fire-multiplier", blockingFireMultiplier);
++    }
++
+     public static boolean tickEmptyWorlds = true;
+     private static void tickEmptyWorlds() {
+         tickEmptyWorlds = getBoolean("settings.tick-empty-worlds", tickEmptyWorlds);
+-- 
+2.29.2
+
