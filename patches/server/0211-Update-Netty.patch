@@ -1,11 +1,11 @@
-From 1f2edb5f7a98eaff352ebbf478bd5cd3e41b7e40 Mon Sep 17 00:00:00 2001
+From d21e8859f01e3670b8b981c2e72f578e9a855efb Mon Sep 17 00:00:00 2001
 From: hpfxd <me@hpfxd.com>
 Date: Wed, 27 Oct 2021 06:29:44 -0400
-Subject: [PATCH] Update to Netty 4.1.118
+Subject: [PATCH] Update Netty
 
 
 diff --git a/pom.xml b/pom.xml
-index d8e35ef2..2a02fbcb 100644
+index d8e35ef2..6b743971 100644
 --- a/pom.xml
 +++ b/pom.xml
 @@ -27,6 +27,11 @@
@@ -15,7 +15,7 @@ index d8e35ef2..2a02fbcb 100644
 +        <dependency>
 +            <groupId>io.netty</groupId>
 +            <artifactId>netty-all</artifactId>
-+            <version>4.1.118.Final</version>
++            <version>4.2.7.Final</version>
 +        </dependency>
          <dependency>
              <groupId>it.unimi.dsi</groupId>
@@ -61,7 +61,7 @@ index e2eb3054..9a075fef 100644
          return this.a.release(i);
      }
 +
-+    // SportPaper start - Delegate new Netty 4.1 methods.
++    // SportPaper start - Delegate new Netty methods
 +    @Override
 +    public boolean isReadOnly() {
 +        return a.isReadOnly();
