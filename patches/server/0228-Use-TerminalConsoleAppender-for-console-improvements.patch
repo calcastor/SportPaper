@@ -1,4 +1,4 @@
-From d68380dd347afb1b45d1d4c9e5e224293ea999ed Mon Sep 17 00:00:00 2001
+From 6ae2f7081f77a3276a429c3d67a73252c8271010 Mon Sep 17 00:00:00 2001
 From: Minecrell <minecrell@minecrell.net>
 Date: Fri, 9 Jun 2017 19:03:43 +0200
 Subject: [PATCH] Use TerminalConsoleAppender for console improvements
@@ -19,7 +19,7 @@ Other changes:
     configuration
 
 diff --git a/pom.xml b/pom.xml
-index c31fc87a..38d8bf98 100644
+index 4b06c9b3..cdaccdb8 100644
 --- a/pom.xml
 +++ b/pom.xml
 @@ -49,12 +49,20 @@
@@ -44,7 +44,7 @@ index c31fc87a..38d8bf98 100644
          <dependency>
              <groupId>org.spigotmc</groupId>
              <artifactId>minecraft-server</artifactId>
-@@ -69,13 +77,20 @@
+@@ -69,13 +77,26 @@
              <type>jar</type>
              <scope>compile</scope>
          </dependency>
@@ -56,9 +56,15 @@ index c31fc87a..38d8bf98 100644
 -            <type>jar</type>
 +            <groupId>org.jline</groupId>
 +            <artifactId>jline-terminal-jni</artifactId>
-+            <version>3.30.4</version>
++            <version>3.30.6</version>
              <scope>compile</scope>
          </dependency>
++        <dependency>
++            <groupId>org.jline</groupId>
++            <artifactId>jline-terminal-ffm</artifactId>
++            <version>3.30.6</version>
++            <scope>compile</scope>
++        </dependency>
 +        <dependency>
 +            <groupId>net.minecrell</groupId>
 +            <artifactId>terminalconsoleappender</artifactId>
@@ -69,7 +75,7 @@ index c31fc87a..38d8bf98 100644
          <dependency>
              <groupId>org.xerial</groupId>
              <artifactId>sqlite-jdbc</artifactId>
-@@ -187,7 +202,6 @@
+@@ -187,7 +208,6 @@
                              <Specification-Title>Bukkit</Specification-Title>
                              <Specification-Version>${api.version}</Specification-Version>
                              <Specification-Vendor>Bukkit Team</Specification-Vendor>
@@ -77,13 +83,13 @@ index c31fc87a..38d8bf98 100644
                          </manifestEntries>
                          <manifestSections>
                              <manifestSection>
-@@ -215,7 +229,16 @@
+@@ -215,7 +235,16 @@
              <plugin>
                  <groupId>org.apache.maven.plugins</groupId>
                  <artifactId>maven-shade-plugin</artifactId>
--                <version>3.5.0</version> <!-- Paper - Update Log4j -->
+-                <version>3.6.1</version> <!-- Paper - Update Log4j -->
 +                <!-- SportPaper start - Update Log4j -->
-+                <version>3.5.0</version>
++                <version>3.6.1</version>
 +                <dependencies>
 +                    <dependency>
 +                        <groupId>org.apache.logging.log4j</groupId>
@@ -95,7 +101,7 @@ index c31fc87a..38d8bf98 100644
                  <executions>
                      <execution>
                          <phase>package</phase>
-@@ -239,10 +262,6 @@
+@@ -239,10 +268,6 @@
                                      <pattern>joptsimple</pattern>
                                      <shadedPattern>org.bukkit.craftbukkit.libs.joptsimple</shadedPattern>
                                  </relocation>
@@ -106,7 +112,7 @@ index c31fc87a..38d8bf98 100644
                                  <relocation>
                                      <pattern>org.ibex</pattern>
                                      <shadedPattern>org.bukkit.craftbukkit.libs.org.ibex</shadedPattern>
-@@ -263,6 +282,17 @@
+@@ -263,6 +288,17 @@
                                      <shadedPattern>net.minecraft.server.v${minecraft_version}</shadedPattern>
                                  </relocation>
                              </relocations>

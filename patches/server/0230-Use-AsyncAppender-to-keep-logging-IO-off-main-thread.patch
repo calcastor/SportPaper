@@ -1,14 +1,14 @@
-From 16ab64a36c84f55a1355d071d042621d5f9fa4ea Mon Sep 17 00:00:00 2001
+From 195b6d6b853e2ab7cf1943916390f521ebc19321 Mon Sep 17 00:00:00 2001
 From: Jason Penilla <11360596+jpenilla@users.noreply.github.com>
 Date: Thu, 12 Aug 2021 04:46:41 -0700
 Subject: [PATCH] Use AsyncAppender to keep logging IO off main thread
 
 
 diff --git a/pom.xml b/pom.xml
-index 72385638..798bcd4b 100644
+index a9232c67..d425e1f7 100644
 --- a/pom.xml
 +++ b/pom.xml
-@@ -111,6 +111,13 @@
+@@ -117,6 +117,13 @@
              <type>jar</type>
              <scope>compile</scope>
          </dependency>
