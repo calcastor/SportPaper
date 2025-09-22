@@ -32,8 +32,7 @@ cd "$basedir/base/Paper/"
 
 git submodule update --init
 
-# To compile with Java 17, we need newer copies of SpecialSource.jar and SpecialSource-2.jar
-cp -f "$basedir/builddata/bin/SpecialSource.jar" BuildData/bin/SpecialSource.jar
+# To compile with modern Java, we need a newer version of SpecialSource-2.jar
 cp -f "$basedir/builddata/bin/SpecialSource-2.jar" BuildData/bin/SpecialSource-2.jar
 
 ./remap.sh && ./decompile.sh && ./init.sh && ./newApplyPatches.sh
