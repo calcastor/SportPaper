@@ -1,4 +1,4 @@
-From 14d9fefb247337d6047747159f7b8be0b9b26717 Mon Sep 17 00:00:00 2001
+From 46e538a595412bea30c60806d61f4c9dcd1ce3cd Mon Sep 17 00:00:00 2001
 From: "BT (calcastor/mame)" <43831917+calcastor@users.noreply.github.com>
 Date: Mon, 6 Feb 2023 23:30:48 -0800
 Subject: [PATCH] Resolve build issues with Java 17
@@ -6,10 +6,10 @@ Subject: [PATCH] Resolve build issues with Java 17
 https://github.com/CobbleSword/NachoSpigot/commit/944e02c131b4f4f12a3140778fc9d681f773ae2c
 
 diff --git a/pom.xml b/pom.xml
-index 2a02fbcb..f38265d6 100644
+index 4d929f612..cad89b944 100644
 --- a/pom.xml
 +++ b/pom.xml
-@@ -105,12 +105,7 @@
+@@ -154,12 +154,7 @@
          </dependency>
      </dependencies>
  
@@ -22,7 +22,7 @@ index 2a02fbcb..f38265d6 100644
          <!-- PaperSpigot - Repo for gitdescribe -->
          <pluginRepository>
              <id>papermc</id> <!-- Paper - Update Log4j -->
-@@ -293,22 +288,7 @@
+@@ -342,22 +337,7 @@
              <plugin>
                  <groupId>org.apache.maven.plugins</groupId>
                  <artifactId>maven-compiler-plugin</artifactId>
@@ -46,5 +46,5 @@ index 2a02fbcb..f38265d6 100644
              <plugin>
                  <groupId>org.apache.maven.plugins</groupId>
 -- 
-2.51.0
+2.51.2
 

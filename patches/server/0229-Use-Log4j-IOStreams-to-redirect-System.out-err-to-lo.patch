@@ -1,4 +1,4 @@
-From 159e6ca8b2a00598d47e613c9931a666f2dd3543 Mon Sep 17 00:00:00 2001
+From 1caab072735513c0d0c7a95a292cede86e5aaf2c Mon Sep 17 00:00:00 2001
 From: Minecrell <minecrell@minecrell.net>
 Date: Mon, 18 Sep 2017 12:00:03 +0200
 Subject: [PATCH] Use Log4j IOStreams to redirect System.out/err to logger
@@ -12,24 +12,24 @@ results in a separate line, even though it should not result in
 a line break. Log4j's implementation handles it correctly.
 
 diff --git a/pom.xml b/pom.xml
-index bd47c696..70a51798 100644
+index 3161c962b..7c9a95ceb 100644
 --- a/pom.xml
 +++ b/pom.xml
-@@ -62,6 +62,12 @@
-             <version>2.25.1</version>
+@@ -113,6 +113,12 @@
+             <version>${log4j.version}</version>
              <scope>compile</scope>
          </dependency>
 +        <dependency>
 +            <groupId>org.apache.logging.log4j</groupId>
 +            <artifactId>log4j-iostreams</artifactId>
-+            <version>2.25.1</version>
++            <version>${log4j.version}</version>
 +            <scope>compile</scope>
 +        </dependency>
          <!-- SportPaper end - Update Log4j -->
          <dependency>
              <groupId>org.spigotmc</groupId>
 diff --git a/src/main/java/net/minecraft/server/DedicatedServer.java b/src/main/java/net/minecraft/server/DedicatedServer.java
-index 194609e7..a833297e 100644
+index 194609e7e..a833297ea 100644
 --- a/src/main/java/net/minecraft/server/DedicatedServer.java
 +++ b/src/main/java/net/minecraft/server/DedicatedServer.java
 @@ -19,7 +19,7 @@ import org.apache.logging.log4j.Logger;
@@ -55,7 +55,7 @@ index 194609e7..a833297e 100644
  
          thread.setDaemon(true);
 diff --git a/src/main/java/org/bukkit/craftbukkit/LoggerOutputStream.java b/src/main/java/org/bukkit/craftbukkit/LoggerOutputStream.java
-index 93526ab6..7dd83f9b 100644
+index 93526ab60..7dd83f9b2 100644
 --- a/src/main/java/org/bukkit/craftbukkit/LoggerOutputStream.java
 +++ b/src/main/java/org/bukkit/craftbukkit/LoggerOutputStream.java
 @@ -5,7 +5,7 @@ import java.io.IOException;
@@ -74,5 +74,5 @@ index 93526ab6..7dd83f9b 100644
 +    */
  }
 -- 
-2.51.0
+2.51.2
 

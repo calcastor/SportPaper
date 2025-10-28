@@ -1,4 +1,4 @@
-From 84a796096f5bee51df3ce941d76c7915329dc31e Mon Sep 17 00:00:00 2001
+From 6d2941bac82d728a118b25eb9dac403fd42b5235 Mon Sep 17 00:00:00 2001
 From: Christopher White <18whitechristop@gmail.com>
 Date: Fri, 22 Sep 2023 15:58:16 -0700
 Subject: [PATCH] Add Tuinity flush patches
@@ -8,10 +8,10 @@ for network manager" and "Consolidate flush calls for entity tracker
 packets" patches
 
 diff --git a/src/main/java/net/minecraft/server/MinecraftServer.java b/src/main/java/net/minecraft/server/MinecraftServer.java
-index 513e2c36..90fca5c6 100644
+index a77701e4..3cf6d5bd 100644
 --- a/src/main/java/net/minecraft/server/MinecraftServer.java
 +++ b/src/main/java/net/minecraft/server/MinecraftServer.java
-@@ -964,7 +964,26 @@ public abstract class MinecraftServer implements Runnable, ICommandListener, IAs
+@@ -965,7 +965,26 @@ public abstract class MinecraftServer implements Runnable, ICommandListener, IAs
                  this.methodProfiler.b();
                  this.methodProfiler.a("tracker");
                  worldserver.timings.tracker.startTiming(); // Spigot
@@ -176,5 +176,5 @@ index 9e35715a..1f14d087 100644
              } finally {
                  this.j.readLock().unlock();
 -- 
-2.51.0
+2.51.2
 

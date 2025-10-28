@@ -1,4 +1,4 @@
-From b2d63960945ddb23045f1acd35616f9233eaccb6 Mon Sep 17 00:00:00 2001
+From eadc9749f5b094a76c9ffaaab0a4bacee19a4d9e Mon Sep 17 00:00:00 2001
 From: Minecrell <minecrell@minecrell.net>
 Date: Fri, 9 Jun 2017 19:03:43 +0200
 Subject: [PATCH] Use TerminalConsoleAppender for console improvements
@@ -19,10 +19,20 @@ Other changes:
     configuration
 
 diff --git a/pom.xml b/pom.xml
-index 24f8010e..bd47c696 100644
+index fee0f5c2f..3161c962b 100644
 --- a/pom.xml
 +++ b/pom.xml
-@@ -49,12 +49,20 @@
+@@ -9,7 +9,9 @@
+     <properties>
+         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+         <api.version>unknown</api.version>
++        <jline.version>3.30.6</jline.version>
+         <junit.version>4.11</junit.version>
++        <log4j.version>2.25.2</log4j.version>
+         <netty.version>4.2.7.Final</netty.version>
+         <minecraft.version>1.8.8</minecraft.version>
+         <minecraft_version>1_8_R3</minecraft_version>
+@@ -98,12 +100,20 @@
              <type>jar</type>
              <scope>compile</scope>
          </dependency>
@@ -31,20 +41,20 @@ index 24f8010e..bd47c696 100644
              <groupId>org.apache.logging.log4j</groupId>
              <artifactId>log4j-core</artifactId>
 -            <version>2.17.0</version> <!-- Paper - Update Log4j -->
-+            <version>2.25.1</version>
++            <version>${log4j.version}</version>
              <scope>compile</scope>
          </dependency>
 +        <dependency>
 +            <groupId>org.apache.logging.log4j</groupId>
 +            <artifactId>log4j-api</artifactId>
-+            <version>2.25.1</version>
++            <version>${log4j.version}</version>
 +            <scope>compile</scope>
 +        </dependency>
 +        <!-- SportPaper end - Update Log4j -->
          <dependency>
              <groupId>org.spigotmc</groupId>
              <artifactId>minecraft-server</artifactId>
-@@ -69,13 +77,26 @@
+@@ -118,13 +128,26 @@
              <type>jar</type>
              <scope>compile</scope>
          </dependency>
@@ -56,13 +66,13 @@ index 24f8010e..bd47c696 100644
 -            <type>jar</type>
 +            <groupId>org.jline</groupId>
 +            <artifactId>jline-terminal-jni</artifactId>
-+            <version>3.30.6</version>
++            <version>${jline.version}</version>
              <scope>compile</scope>
          </dependency>
 +        <dependency>
 +            <groupId>org.jline</groupId>
 +            <artifactId>jline-terminal-ffm</artifactId>
-+            <version>3.30.6</version>
++            <version>${jline.version}</version>
 +            <scope>compile</scope>
 +        </dependency>
 +        <dependency>
@@ -75,7 +85,7 @@ index 24f8010e..bd47c696 100644
          <dependency>
              <groupId>org.xerial</groupId>
              <artifactId>sqlite-jdbc</artifactId>
-@@ -187,7 +208,6 @@
+@@ -236,7 +259,6 @@
                              <Specification-Title>Bukkit</Specification-Title>
                              <Specification-Version>${api.version}</Specification-Version>
                              <Specification-Vendor>Bukkit Team</Specification-Vendor>
@@ -83,7 +93,7 @@ index 24f8010e..bd47c696 100644
                          </manifestEntries>
                          <manifestSections>
                              <manifestSection>
-@@ -215,7 +235,16 @@
+@@ -264,7 +286,16 @@
              <plugin>
                  <groupId>org.apache.maven.plugins</groupId>
                  <artifactId>maven-shade-plugin</artifactId>
@@ -101,7 +111,7 @@ index 24f8010e..bd47c696 100644
                  <executions>
                      <execution>
                          <phase>package</phase>
-@@ -239,10 +268,6 @@
+@@ -288,10 +319,6 @@
                                      <pattern>joptsimple</pattern>
                                      <shadedPattern>org.bukkit.craftbukkit.libs.joptsimple</shadedPattern>
                                  </relocation>
@@ -112,7 +122,7 @@ index 24f8010e..bd47c696 100644
                                  <relocation>
                                      <pattern>org.ibex</pattern>
                                      <shadedPattern>org.bukkit.craftbukkit.libs.org.ibex</shadedPattern>
-@@ -263,6 +288,17 @@
+@@ -312,6 +339,17 @@
                                      <shadedPattern>net.minecraft.server.v${minecraft_version}</shadedPattern>
                                  </relocation>
                              </relocations>
@@ -132,7 +142,7 @@ index 24f8010e..bd47c696 100644
                  </executions>
 diff --git a/src/main/java/com/destroystokyo/paper/console/PaperConsole.java b/src/main/java/com/destroystokyo/paper/console/PaperConsole.java
 new file mode 100644
-index 00000000..5e2c4998
+index 000000000..5e2c49981
 --- /dev/null
 +++ b/src/main/java/com/destroystokyo/paper/console/PaperConsole.java
 @@ -0,0 +1,41 @@
@@ -180,7 +190,7 @@ index 00000000..5e2c4998
 \ No newline at end of file
 diff --git a/src/main/java/com/destroystokyo/paper/console/TerminalConsoleCommandSender.java b/src/main/java/com/destroystokyo/paper/console/TerminalConsoleCommandSender.java
 new file mode 100644
-index 00000000..61f9446b
+index 000000000..61f9446b8
 --- /dev/null
 +++ b/src/main/java/com/destroystokyo/paper/console/TerminalConsoleCommandSender.java
 @@ -0,0 +1,17 @@
@@ -203,7 +213,7 @@ index 00000000..61f9446b
 +}
 \ No newline at end of file
 diff --git a/src/main/java/net/minecraft/server/DedicatedServer.java b/src/main/java/net/minecraft/server/DedicatedServer.java
-index 79a53cc4..194609e7 100644
+index 79a53cc4d..194609e7e 100644
 --- a/src/main/java/net/minecraft/server/DedicatedServer.java
 +++ b/src/main/java/net/minecraft/server/DedicatedServer.java
 @@ -69,7 +69,9 @@ public class DedicatedServer extends MinecraftServer implements IMinecraftServer
@@ -246,10 +256,10 @@ index 79a53cc4..194609e7 100644
          System.setOut(new PrintStream(new LoggerOutputStream(logger, Level.INFO), true));
          System.setErr(new PrintStream(new LoggerOutputStream(logger, Level.WARN), true));
 diff --git a/src/main/java/net/minecraft/server/MinecraftServer.java b/src/main/java/net/minecraft/server/MinecraftServer.java
-index 90fca5c6..f6a9add2 100644
+index 3cf6d5bda..a3fe1faba 100644
 --- a/src/main/java/net/minecraft/server/MinecraftServer.java
 +++ b/src/main/java/net/minecraft/server/MinecraftServer.java
-@@ -47,7 +47,7 @@ import org.apache.logging.log4j.Logger;
+@@ -48,7 +48,7 @@ import org.apache.logging.log4j.Logger;
  import java.io.IOException;
  import java.util.concurrent.atomic.AtomicBoolean;
  
@@ -258,7 +268,7 @@ index 90fca5c6..f6a9add2 100644
  import joptsimple.OptionSet;
  
  import org.bukkit.craftbukkit.Main;
-@@ -124,7 +124,7 @@ public abstract class MinecraftServer implements Runnable, ICommandListener, IAs
+@@ -125,7 +125,7 @@ public abstract class MinecraftServer implements Runnable, ICommandListener, IAs
      public OptionSet options;
      public org.bukkit.command.ConsoleCommandSender console;
      public org.bukkit.command.RemoteConsoleCommandSender remoteConsole;
@@ -267,7 +277,7 @@ index 90fca5c6..f6a9add2 100644
      public static int currentTick = 0; // PaperSpigot - Further improve tick loop
      public final Thread primaryThread;
      //public java.util.Queue<Runnable> processQueue = new java.util.concurrent.ConcurrentLinkedQueue<Runnable>(); SportBukkit - use Mojang's task queue
-@@ -154,7 +154,9 @@ public abstract class MinecraftServer implements Runnable, ICommandListener, IAs
+@@ -155,7 +155,9 @@ public abstract class MinecraftServer implements Runnable, ICommandListener, IAs
          this.Y = this.V.createProfileRepository();
          // CraftBukkit start
          this.options = options;
@@ -277,7 +287,7 @@ index 90fca5c6..f6a9add2 100644
          if (System.console() == null && System.getProperty("jline.terminal") == null) {
              System.setProperty("jline.terminal", "jline.UnsupportedTerminal");
              Main.useJline = false;
-@@ -175,6 +177,8 @@ public abstract class MinecraftServer implements Runnable, ICommandListener, IAs
+@@ -176,6 +178,8 @@ public abstract class MinecraftServer implements Runnable, ICommandListener, IAs
                  LOGGER.warn((String) null, ex);
              }
          }
@@ -286,7 +296,7 @@ index 90fca5c6..f6a9add2 100644
          Runtime.getRuntime().addShutdownHook(new org.bukkit.craftbukkit.util.ServerShutdownThread(this));
  
          this.serverThread = primaryThread = new Thread(this, "Server thread"); // Moved from main
-@@ -765,7 +769,7 @@ public abstract class MinecraftServer implements Runnable, ICommandListener, IAs
+@@ -766,7 +770,7 @@ public abstract class MinecraftServer implements Runnable, ICommandListener, IAs
              } finally {
                  // CraftBukkit start - Restore terminal to original settings
                  try {
@@ -295,7 +305,7 @@ index 90fca5c6..f6a9add2 100644
                  } catch (Exception ignored) {
                  }
                  // CraftBukkit end
-@@ -1294,7 +1298,36 @@ public abstract class MinecraftServer implements Runnable, ICommandListener, IAs
+@@ -1295,7 +1299,36 @@ public abstract class MinecraftServer implements Runnable, ICommandListener, IAs
      }
  
      public void sendMessage(IChatBaseComponent ichatbasecomponent) {
@@ -334,7 +344,7 @@ index 90fca5c6..f6a9add2 100644
  
      public boolean a(int i, String s) {
 diff --git a/src/main/java/net/minecraft/server/PlayerList.java b/src/main/java/net/minecraft/server/PlayerList.java
-index cb6a3be0..39d24de7 100644
+index cb6a3be08..39d24de78 100644
 --- a/src/main/java/net/minecraft/server/PlayerList.java
 +++ b/src/main/java/net/minecraft/server/PlayerList.java
 @@ -72,8 +72,7 @@ public abstract class PlayerList {
@@ -348,7 +358,7 @@ index cb6a3be0..39d24de7 100644
  
          this.k = new GameProfileBanList(PlayerList.a);
 diff --git a/src/main/java/org/bukkit/craftbukkit/CraftServer.java b/src/main/java/org/bukkit/craftbukkit/CraftServer.java
-index 52b2d106..e5343791 100644
+index 52b2d106b..e53437915 100644
 --- a/src/main/java/org/bukkit/craftbukkit/CraftServer.java
 +++ b/src/main/java/org/bukkit/craftbukkit/CraftServer.java
 @@ -120,7 +120,7 @@ import io.netty.buffer.ByteBuf;
@@ -375,7 +385,7 @@ index 52b2d106..e5343791 100644
      @Override
      public PluginCommand getPluginCommand(String name) {
 diff --git a/src/main/java/org/bukkit/craftbukkit/Main.java b/src/main/java/org/bukkit/craftbukkit/Main.java
-index 737904d4..4f2ae747 100644
+index 737904d4d..4f2ae7479 100644
 --- a/src/main/java/org/bukkit/craftbukkit/Main.java
 +++ b/src/main/java/org/bukkit/craftbukkit/Main.java
 @@ -10,7 +10,7 @@ import java.util.logging.Logger;
@@ -416,7 +426,7 @@ index 737904d4..4f2ae747 100644
  
                  // Spigot Start
 diff --git a/src/main/java/org/bukkit/craftbukkit/command/ColouredConsoleSender.java b/src/main/java/org/bukkit/craftbukkit/command/ColouredConsoleSender.java
-index 26a2fb89..d2c8a827 100644
+index 26a2fb894..d2c8a8273 100644
 --- a/src/main/java/org/bukkit/craftbukkit/command/ColouredConsoleSender.java
 +++ b/src/main/java/org/bukkit/craftbukkit/command/ColouredConsoleSender.java
 @@ -3,16 +3,18 @@ package org.bukkit.craftbukkit.command;
@@ -446,7 +456,7 @@ index 26a2fb89..d2c8a827 100644
 +    */ // SportPaper end - comment out whole class
  }
 diff --git a/src/main/java/org/bukkit/craftbukkit/command/ConsoleCommandCompleter.java b/src/main/java/org/bukkit/craftbukkit/command/ConsoleCommandCompleter.java
-index 7dc9f53c..7324a5c4 100644
+index 7dc9f53c4..7324a5c40 100644
 --- a/src/main/java/org/bukkit/craftbukkit/command/ConsoleCommandCompleter.java
 +++ b/src/main/java/org/bukkit/craftbukkit/command/ConsoleCommandCompleter.java
 @@ -7,41 +7,63 @@ import java.util.logging.Level;
@@ -523,7 +533,7 @@ index 7dc9f53c..7324a5c4 100644
      }
  }
 diff --git a/src/main/java/org/bukkit/craftbukkit/util/ServerShutdownThread.java b/src/main/java/org/bukkit/craftbukkit/util/ServerShutdownThread.java
-index ae3481ba..35ec02a0 100644
+index ae3481ba8..35ec02a04 100644
 --- a/src/main/java/org/bukkit/craftbukkit/util/ServerShutdownThread.java
 +++ b/src/main/java/org/bukkit/craftbukkit/util/ServerShutdownThread.java
 @@ -18,7 +18,7 @@ public class ServerShutdownThread extends Thread {
@@ -536,7 +546,7 @@ index ae3481ba..35ec02a0 100644
              }
          }
 diff --git a/src/main/java/org/bukkit/craftbukkit/util/TerminalConsoleWriterThread.java b/src/main/java/org/bukkit/craftbukkit/util/TerminalConsoleWriterThread.java
-index 772f730f..15a806d1 100644
+index 772f730ff..15a806d10 100644
 --- a/src/main/java/org/bukkit/craftbukkit/util/TerminalConsoleWriterThread.java
 +++ b/src/main/java/org/bukkit/craftbukkit/util/TerminalConsoleWriterThread.java
 @@ -4,11 +4,11 @@ import java.io.IOException;
@@ -560,7 +570,7 @@ index 772f730f..15a806d1 100644
 +    */ // SportPaper end - comment out whole class
  }
 diff --git a/src/main/resources/log4j2.xml b/src/main/resources/log4j2.xml
-index 63cb069f..a3fcd871 100644
+index 63cb069fe..a3fcd8711 100644
 --- a/src/main/resources/log4j2.xml
 +++ b/src/main/resources/log4j2.xml
 @@ -1,12 +1,11 @@
@@ -590,5 +600,5 @@ index 63cb069f..a3fcd871 100644
              <AppenderRef ref="TerminalConsole" level="info"/>
          </Root>
 -- 
-2.51.0
+2.51.2
 

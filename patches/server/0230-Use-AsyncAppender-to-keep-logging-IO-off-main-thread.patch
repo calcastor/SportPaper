@@ -1,14 +1,14 @@
-From 195b6d6b853e2ab7cf1943916390f521ebc19321 Mon Sep 17 00:00:00 2001
+From d7c81546f40951fe131a2aae65a15a842823cbc7 Mon Sep 17 00:00:00 2001
 From: Jason Penilla <11360596+jpenilla@users.noreply.github.com>
 Date: Thu, 12 Aug 2021 04:46:41 -0700
 Subject: [PATCH] Use AsyncAppender to keep logging IO off main thread
 
 
 diff --git a/pom.xml b/pom.xml
-index a9232c67..d425e1f7 100644
+index 7c9a95ceb..9e316ed59 100644
 --- a/pom.xml
 +++ b/pom.xml
-@@ -117,6 +117,13 @@
+@@ -168,6 +168,13 @@
              <type>jar</type>
              <scope>compile</scope>
          </dependency>
@@ -23,7 +23,7 @@ index a9232c67..d425e1f7 100644
          <dependency>
              <groupId>junit</groupId>
 diff --git a/src/main/resources/log4j2.xml b/src/main/resources/log4j2.xml
-index a3fcd871..128f6ece 100644
+index a3fcd8711..128f6ece8 100644
 --- a/src/main/resources/log4j2.xml
 +++ b/src/main/resources/log4j2.xml
 @@ -11,14 +11,17 @@
@@ -47,5 +47,5 @@ index a3fcd871..128f6ece 100644
      </Loggers>
  </Configuration>
 -- 
-2.51.0
+2.51.2
 

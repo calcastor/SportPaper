@@ -1,26 +1,82 @@
-From d21e8859f01e3670b8b981c2e72f578e9a855efb Mon Sep 17 00:00:00 2001
+From 556ee4c6892c7e7e915875afb410ed4c24ca63e1 Mon Sep 17 00:00:00 2001
 From: hpfxd <me@hpfxd.com>
 Date: Wed, 27 Oct 2021 06:29:44 -0400
 Subject: [PATCH] Update Netty
 
 
 diff --git a/pom.xml b/pom.xml
-index d8e35ef2..6b743971 100644
+index 1d2ef9d87..4d929f612 100644
 --- a/pom.xml
 +++ b/pom.xml
-@@ -27,6 +27,11 @@
+@@ -10,6 +10,7 @@
+         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+         <api.version>unknown</api.version>
+         <junit.version>4.11</junit.version>
++        <netty.version>4.2.7.Final</netty.version>
+         <minecraft.version>1.8.8</minecraft.version>
+         <minecraft_version>1_8_R3</minecraft_version>
+         <buildtag.prefix>git-Bukkit-</buildtag.prefix>
+@@ -27,6 +28,59 @@
      </parent>
  
      <dependencies>
 +        <dependency>
 +            <groupId>io.netty</groupId>
-+            <artifactId>netty-all</artifactId>
-+            <version>4.2.7.Final</version>
++            <artifactId>netty-buffer</artifactId>
++            <version>${netty.version}</version>
++        </dependency>
++        <dependency>
++            <groupId>io.netty</groupId>
++            <artifactId>netty-codec-base</artifactId>
++            <version>${netty.version}</version>
++        </dependency>
++        <dependency>
++            <groupId>io.netty</groupId>
++            <artifactId>netty-common</artifactId>
++            <version>${netty.version}</version>
++        </dependency>
++        <dependency>
++            <groupId>io.netty</groupId>
++            <artifactId>netty-handler</artifactId>
++            <version>${netty.version}</version>
++        </dependency>
++        <dependency>
++            <groupId>io.netty</groupId>
++            <artifactId>netty-transport</artifactId>
++            <version>${netty.version}</version>
++        </dependency>
++        <dependency>
++            <groupId>io.netty</groupId>
++            <artifactId>netty-transport-classes-epoll</artifactId>
++            <version>${netty.version}</version>
++        </dependency>
++        <dependency>
++            <groupId>io.netty</groupId>
++            <artifactId>netty-transport-native-epoll</artifactId>
++            <version>${netty.version}</version>
++            <classifier>linux-aarch_64</classifier>
++        </dependency>
++        <dependency>
++            <groupId>io.netty</groupId>
++            <artifactId>netty-transport-native-epoll</artifactId>
++            <version>${netty.version}</version>
++            <classifier>linux-riscv64</classifier>
++        </dependency>
++        <dependency>
++            <groupId>io.netty</groupId>
++            <artifactId>netty-transport-native-epoll</artifactId>
++            <version>${netty.version}</version>
++            <classifier>linux-x86_64</classifier>
++        </dependency>
++        <dependency>
++            <groupId>io.netty</groupId>
++            <artifactId>netty-transport-native-unix-common</artifactId>
++            <version>${netty.version}</version>
 +        </dependency>
          <dependency>
              <groupId>it.unimi.dsi</groupId>
              <artifactId>fastutil</artifactId>
-@@ -228,6 +233,7 @@
+@@ -228,6 +282,7 @@
                                  <filter>
                                      <artifact>org.spigotmc:minecraft-server:**</artifact>
                                      <excludes>
@@ -28,8 +84,29 @@ index d8e35ef2..6b743971 100644
                                          <exclude>org/apache/logging/log4j/**</exclude>
                                      </excludes>
                                  </filter>
+diff --git a/src/main/java/net/minecraft/server/MinecraftServer.java b/src/main/java/net/minecraft/server/MinecraftServer.java
+index 513e2c361..a77701e42 100644
+--- a/src/main/java/net/minecraft/server/MinecraftServer.java
++++ b/src/main/java/net/minecraft/server/MinecraftServer.java
+@@ -14,6 +14,7 @@ import io.netty.buffer.ByteBuf;
+ import io.netty.buffer.ByteBufOutputStream;
+ import io.netty.buffer.Unpooled;
+ import io.netty.handler.codec.base64.Base64;
++import io.netty.util.ResourceLeakDetector;
+ import java.awt.GraphicsEnvironment;
+ import java.awt.image.BufferedImage;
+ import java.io.File;
+@@ -141,7 +142,7 @@ public abstract class MinecraftServer implements Runnable, ICommandListener, IAs
+     // SportBukkit end
+ 
+     public MinecraftServer(OptionSet options, Proxy proxy, File file1) {
+-        io.netty.util.ResourceLeakDetector.setEnabled( false ); // Spigot - disable
++        io.netty.util.ResourceLeakDetector.setLevel(ResourceLeakDetector.Level.DISABLED); // Spigot - disable
+         this.e = proxy;
+         MinecraftServer.l = this;
+         // this.universe = file; // CraftBukkit
 diff --git a/src/main/java/net/minecraft/server/PacketDataSerializer.java b/src/main/java/net/minecraft/server/PacketDataSerializer.java
-index e2eb3054..9a075fef 100644
+index e2eb30546..baa12427d 100644
 --- a/src/main/java/net/minecraft/server/PacketDataSerializer.java
 +++ b/src/main/java/net/minecraft/server/PacketDataSerializer.java
 @@ -20,6 +20,10 @@ import java.nio.channels.GatheringByteChannel;
@@ -324,5 +401,5 @@ index e2eb3054..9a075fef 100644
 +    // SportPaper end
  }
 -- 
-2.51.0
+2.51.2
 

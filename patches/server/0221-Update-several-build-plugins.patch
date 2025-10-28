@@ -1,14 +1,14 @@
-From 91b5d988b1bfa883c7b3606ca2ccf7b3b98ea391 Mon Sep 17 00:00:00 2001
+From 8e34511d711959682009cdbebc17fb53f4e5d8b9 Mon Sep 17 00:00:00 2001
 From: "BT (calcastor/mame)" <43831917+calcastor@users.noreply.github.com>
 Date: Tue, 22 Aug 2023 10:11:12 -0700
 Subject: [PATCH] Update several build plugins
 
 
 diff --git a/pom.xml b/pom.xml
-index f38265d6..4b06c9b3 100644
+index cad89b944..fee0f5c2f 100644
 --- a/pom.xml
 +++ b/pom.xml
-@@ -120,7 +120,7 @@
+@@ -169,7 +169,7 @@
              <plugin>
                  <groupId>net.md-5</groupId>
                  <artifactId>scriptus</artifactId>
@@ -17,7 +17,7 @@ index f38265d6..4b06c9b3 100644
                  <executions>
                      <execution>
                          <id>ex-sport</id>
-@@ -175,7 +175,7 @@
+@@ -224,7 +224,7 @@
              <plugin>
                  <groupId>org.apache.maven.plugins</groupId>
                  <artifactId>maven-jar-plugin</artifactId>
@@ -26,7 +26,7 @@ index f38265d6..4b06c9b3 100644
                  <configuration>
                      <forceCreation>true</forceCreation> <!-- Required to prevent shading the jar multiple times -->
                      <archive>
-@@ -215,7 +215,7 @@
+@@ -264,7 +264,7 @@
              <plugin>
                  <groupId>org.apache.maven.plugins</groupId>
                  <artifactId>maven-shade-plugin</artifactId>
@@ -35,7 +35,7 @@ index f38265d6..4b06c9b3 100644
                  <executions>
                      <execution>
                          <phase>package</phase>
-@@ -271,7 +271,7 @@
+@@ -320,7 +320,7 @@
              <plugin>
                  <groupId>net.md-5</groupId>
                  <artifactId>specialsource-maven-plugin</artifactId>
@@ -44,7 +44,7 @@ index f38265d6..4b06c9b3 100644
                  <executions>
                      <execution>
                          <phase>package</phase>
-@@ -288,12 +288,12 @@
+@@ -337,12 +337,12 @@
              <plugin>
                  <groupId>org.apache.maven.plugins</groupId>
                  <artifactId>maven-compiler-plugin</artifactId>
@@ -60,5 +60,5 @@ index f38265d6..4b06c9b3 100644
                      <workingDirectory>${basedir}/target/test-server</workingDirectory>
                      <excludes>
 -- 
-2.51.0
+2.51.2
 
