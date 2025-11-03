@@ -37,15 +37,19 @@ jobs:
         run: |
           git config --global user.email "ci@github.com"
           git config --global user.name "GitHub CI"
+      - id: setup-maven
+        name: Setup Maven
+        shell: bash
+        run: mkdir .mvn && cp .github/maven.config .mvn
       - id: build
         name: Build SportPaper
-        run: bash sportpaper build
+        run: bash sportpaper jar
       - id: upload
         name: Upload SportPaper
         uses: actions/upload-artifact@v4
         with:
           name: SportPaper.jar
-          path: SportPaper-Server/target/sportpaper-*.jar
+          path: sportpaper.jar
           if-no-files-found: error
       - id: deploy
         if: |
