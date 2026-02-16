@@ -1,8 +1,23 @@
-From 1a7afd5ba19b24ad41bbe1d3a0d8ed911a23615c Mon Sep 17 00:00:00 2001
-From: "BT (calcastor/mame)" <43831917+calcastor@users.noreply.github.com>
-Date: Mon, 17 Nov 2025 23:03:35 -0800
-Subject: [PATCH] Backport "Use BigDecimal to improve accuracy of TPS results"
+From ee0272f1cca0af67ea1cce849f855bae8b800bb6 Mon Sep 17 00:00:00 2001
+From: Aikar <aikar@aikar.co>
+Date: Mon, 17 Sep 2018 22:32:37 -0400
+Subject: [PATCH] Use BigDecimal to improve accuracy of TPS results - long live
+ 20 TPS!
 
+It's always been commonly said to 'ignore' that TPS was '19.X', that
+it was fine.
+
+I suspect that the inaccuracy of floating point math resulted in us
+losing precision over time, making it difficult to actually get back to 20,
+as you know the fun 0.1 + 0.1 ... 9 more times != 1 problem.
+
+BigDecimal supports working with doubles with higher precision.
+
+This change makes it so our RollingAverage class maintains all of the data
+using BigDecimal and using BigDecimal arithematic operations.
+
+This ensures we have extremely high precision, enabling us to
+actually be able print '20 TPS' when TPS is perfect.
 
 diff --git a/src/main/java/net/minecraft/server/MinecraftServer.java b/src/main/java/net/minecraft/server/MinecraftServer.java
 index 778d94000..aa27bf452 100644
@@ -112,5 +127,5 @@ index 3e6c2858f..766fb5931 100644
      }
  }
 -- 
-2.52.0
+2.50.1 (Apple Git-155)
 
